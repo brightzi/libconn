@@ -18,14 +18,7 @@
 //     #define CONN_EXPORT
 // #endif
 
-typedef void (*event_cb) (event_t *ev);
 
-typedef void (*io_cb) (io_t io);
-typedef void (*read_cb) (io_t io, void *buf, int readybytes);
-typedef void (*write_cb) (io_t io, const char *buf, int writebytes);
-typedef void (*close_cb) (io_t io);
-typedef void (*connect_cb) (io_t io);
-typedef void (*accept_cb) (io_t io);
 
 // event_loop interface
 event_loop_t event_loop_init();
@@ -40,9 +33,12 @@ int event_loop_stop(event_loop_t loop);
 
 int event_loop_wakeup(event_loop_t);
 
-int io_add(io_t io, io_cb cb);
-int io_remove(io_t io);
 
+// high-level api
+io_t create_io(event_loop_t loop, int fd, int events, read_cb read_cb, write_cb write_cb);
+void free_io(io_t io);
+
+// low-level api
 void io_set_readcb(io_t io, read_cb cb);
 void io_set_writecb(io_t io, write_cb cb);
 void io_set_closecb(io_t io, close_cb cb);

@@ -2,6 +2,7 @@
 #define EVENT_H
 
 #include <stdint.h>
+#include "dispatcher.h"
 #include "heap.h"
 
 typedef struct event_st event_st, *event_t;
@@ -18,6 +19,10 @@ typedef void (*close_cb) (io_t io);
 typedef void (*connect_cb) (io_t io);
 typedef void (*accept_cb) (io_t io);
 
+#define EVENT_READ  0x01
+#define EVENT_WRITE 0x02
+#define EVENT_RW    0x03
+
 typedef enum event_type{
     event_io,
     event_timer,
@@ -25,12 +30,13 @@ typedef enum event_type{
 } event_type;
 
 #define EVENT_FILEDS \
-    event_loop_t event_loop; \ 
+    event_loop_t loop; \ 
     event_type etype; \ 
     uint64_t event_id;\ 
     event_cb cb; \ 
     void *userdata; \ 
-    event_t next_event;   
+    event_t next_event; \
+    unsigned pending;
 
 struct event_st {
     EVENT_FILEDS
@@ -74,12 +80,15 @@ struct io_st {
 };
 
 struct event_loop_st {
+    int quit;
     char name[32];
+    int tid;
     uint64_t start_ms;
     uint64_t cur_ms;
 
     io_st **io_array;  // fd -> event_io_t
     uint32_t io_num;
+    uint32_t io_maxsize;
 
     struct heap timers;
     uint32_t timers_num;
@@ -87,9 +96,12 @@ struct event_loop_st {
     event_t pending;  
     uint32_t npendings;
 
-    int eventfd[2];
-    void *event_dispatcher;
+    int pipefd[2]; // pipe[0] for read, pipe[1] for write
+    const struct event_dispatcher *disp;
+    void *disp_data;
 };
+
+void event_pending(event_t ev);
 
 
 #endif

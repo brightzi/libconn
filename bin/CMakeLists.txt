@@ -9,4 +9,5 @@ foreach(SOURCE ${SOURCES})
     # 获取文件名（不带路径和扩展名）
     get_filename_component(EXEC_NAME ${SOURCE} NAME_WE)
     add_executable(${EXEC_NAME} ${SOURCE})
+    target_link_libraries(${EXEC_NAME} ${CONN_LIB})
 endforeach()
