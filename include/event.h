@@ -65,6 +65,11 @@ struct io_st {
     int write_timeout;
     int heartbeat_interval;
 
+    char *ip;
+    char *port;
+    struct sockaddr_in *local_addr;
+    struct sockaddr_in *peer_addr;
+
     io_cb io_cb;
 
     read_cb read_cb;

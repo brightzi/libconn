@@ -2,6 +2,7 @@
 #define EVENT_LOOP_H
 
 #include "event.h"
+#include <errno.h>
 
 // CONN_EXPORT
 // #if defined(HV_STATICLIB) || defined(HV_SOURCE)
@@ -37,6 +38,8 @@ int event_loop_wakeup(event_loop_t);
 // high-level api
 io_t create_io(event_loop_t loop, int fd, int events, read_cb read_cb, write_cb write_cb);
 void free_io(io_t io);
+io_t get_io(event_loop_t loop, int fd);
+
 
 // low-level api
 void io_set_readcb(io_t io, read_cb cb);
@@ -50,11 +53,9 @@ void io_set_write_timeout(io_t io, int timeout);
 void io_set_close_timeout(io_t io, int timeout);
 void io_set_connect_timeout(io_t io, int timeout);
 
-
 io_t create_tcp_client(event_loop_t loop, const char *ip, const char *port, connect_cb connect_cb, close_cb close_cb);
 
 io_t create_tcp_server(event_loop_t loop, const char *ip, const char *port, accept_cb accept_cb);
-
 
 
 #endif

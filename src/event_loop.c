@@ -1,6 +1,8 @@
 #include "event_loop.h"
 #include "timer.h"
 #include "dispatcher.h"
+#include "io.h"
+
 
 extern const struct event_dispatcher select_dispatcher;
 
@@ -10,8 +12,20 @@ event_loop_t event_loop_init() {
 
 void pipe_read_cb(io_t io, void *bufff, int readybytes) {
     char buf[1024];
-    read(io->fd, buf, 1024);
-    printf("buf : %s\n", buf);
+    int nread;
+    while ((nread = read(io->fd, buf, 1024)) > 0) {
+        printf("buf : %s\n", buf);
+        if (nread == 0) {
+            if (errno == EAGAIN) {
+                printf("read again\n");
+                break;
+            }
+        } else if (nread > 0) {
+            break;
+        } else {
+            break;
+        }
+    }
 }
 
 event_loop_t event_loop_init_with_name(const char *name) {
@@ -74,7 +88,7 @@ int event_loop_run(event_loop_t loop) {
 
 int event_loop_stop(event_loop_t loop) {
     if (loop) {
-        loop->quit = 0;
+        loop->quit = 1;
     }
 }
 
@@ -82,7 +96,12 @@ int event_loop_wakeup(event_loop_t loop) {
     if (!loop) {
         return -1;
     }   
-    write(loop->pipefd[1], "hello world", strlen("hello world")+1);
+    write(loop->pipefd[1], "hello world", strlen("hello world"));
+    write(loop->pipefd[1], "hello world", strlen("hello world"));
+    write(loop->pipefd[1], "hello world", strlen("hello world"));
+    write(loop->pipefd[1], "hello world", strlen("hello world"));
+    write(loop->pipefd[1], "hello world", strlen("hello world"));
+    write(loop->pipefd[1], "hello world", strlen("hello world"));
     return 0;
 }
 
@@ -91,8 +110,8 @@ void process_pending_event(event_loop_t loop) {
         return -1;
     }
 
-    while(loop->pending) {
-        io_t io = loop->pending;
+    io_t io = loop->pending;
+    while(io) {
         if (io->revents & EVENT_READ) {
             if (io->read_cb) {
                 io->read_cb(io, NULL, 0);
@@ -103,6 +122,7 @@ void process_pending_event(event_loop_t loop) {
                 io->write_cb(io, NULL, 0);
             }
         }
+        io = io->next_event;
     }
 
     loop->pending = NULL;
@@ -110,28 +130,28 @@ void process_pending_event(event_loop_t loop) {
 }
 
 
-static void io_init(io_t io) {
-
+io_t get_io(event_loop_t loop, int fd) {
+    io_t io = malloc(sizeof(io_st));
+    if (io == NULL) {
+        return NULL;
+    }
+    memset(io, 0, sizeof(io_st));
+    io->fd = fd;
+    io->loop = loop;
+    loop->io_array[fd] = io;
+    loop->io_num++;
+    return io;
 }
 
 io_t create_io(event_loop_t loop, int fd, int events, read_cb read_cb, write_cb write_cb) {
     if (!loop) {
         return NULL;
     }
-
-    io_t io = malloc(sizeof(io_st));
-    if (io == NULL) {
-        return NULL;
+    io_t io = get_io(loop,fd);
+    if (io) {
+        io->read_cb = read_cb;
+        io->write_cb = write_cb;
     }
-
-    memset(io, 0, sizeof(io_st));
-    io_init(io);
-    io->loop = loop;
-    io->fd = fd;
-    io->read_cb = read_cb;
-    io->write_cb = write_cb;
-    loop->io_array[fd] = io;
-    loop->io_num++;
     return io;
 }
 
@@ -142,7 +162,29 @@ void free_io(io_t io) {
     // close socket
     //free io
     if (io) {
+        if (io->fd) {
+            closesocket(io);
+        }
         free(io);
     }
 }
 
+io_t create_tcp_client(event_loop_t loop, const char *ip, const char *port, connect_cb connect_cb, close_cb close_cb) {
+    if (loop == NULL) {
+        return NULL;
+    }
+
+    int client_fd = create_socket();
+    io_t io = get_io(loop, client_fd);
+    if (io == NULL) {
+        return NULL;
+    }
+    io->ip = ip;
+    strcpy(io->port, port);
+    int ret = io_connect(io);
+    if (ret != 0) {
+        free_io(io);
+        return NULL;
+    }
+    return io;
+}
