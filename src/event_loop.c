@@ -3,7 +3,6 @@
 #include "dispatcher.h"
 #include "io.h"
 
-
 extern const struct event_dispatcher select_dispatcher;
 
 event_loop_t event_loop_init() {
@@ -54,7 +53,7 @@ event_loop_t event_loop_init_with_name(const char *name) {
 
     loop->disp = &select_dispatcher;
     loop->disp_data = loop->disp->init(loop);
-    create_io(loop, loop->pipefd[0], EVENT_READ, pipe_read_cb, NULL); 
+    io_t io = create_io(loop, loop->pipefd[0], EVENT_READ, pipe_read_cb, NULL); 
     loop->disp->add(loop, loop->pipefd[0], EVENT_READ);
     return loop;    
 }
@@ -112,15 +111,9 @@ void process_pending_event(event_loop_t loop) {
 
     io_t io = loop->pending;
     while(io) {
-        if (io->revents & EVENT_READ) {
-            if (io->read_cb) {
-                io->read_cb(io, NULL, 0);
-            }
-        }
-        if (io->revents & EVENT_WRITE) {
-            if (io->write_cb) {
-                io->write_cb(io, NULL, 0);
-            }
+        if (io->cb) {
+            io->cb(io);
+            io->pending = 0;
         }
         io = io->next_event;
     }
@@ -163,10 +156,50 @@ void free_io(io_t io) {
     //free io
     if (io) {
         if (io->fd) {
-            closesocket(io);
+            close_socket(io);
         }
         free(io);
     }
+}
+
+int io_read_enable(io_t io) {
+    io_add(io, handle_event, EVENT_READ);
+    return 0;
+}
+
+void io_set_readcb(io_t io, read_cb cb) {
+    io->read_cb = cb;
+}
+
+void io_set_writecb(io_t io, write_cb cb) {
+    io->write_cb = cb;
+}
+
+void io_set_closecb(io_t io, close_cb cb) {
+    io->close_cb = cb;
+}
+
+void io_set_connectcb(io_t io, connect_cb cb) {
+    io->connect_cb = cb;
+}
+
+void io_set_acceptcb(io_t io, accept_cb cb) {
+    io->accept_cb = cb;
+}
+
+event_timer_t add_timer(event_loop_t loop, int timeout, timer_cb cb, int repeat) {
+    event_timer_t timer = malloc(sizeof(event_timer_st));
+    if (!timer) {
+        return NULL;
+    } 
+
+    timer->cb = cb;
+    timer->repeat = repeat;
+    return timer;
+}
+
+void del_timer(event_loop_t loop, event_timer_t timer) {
+
 }
 
 io_t create_tcp_client(event_loop_t loop, const char *ip, const char *port, connect_cb connect_cb, close_cb close_cb) {
@@ -179,12 +212,16 @@ io_t create_tcp_client(event_loop_t loop, const char *ip, const char *port, conn
     if (io == NULL) {
         return NULL;
     }
-    io->ip = ip;
-    strcpy(io->port, port);
+    io->ip = strdup(ip);
+    io->port = strdup(port);
     int ret = io_connect(io);
     if (ret != 0) {
         free_io(io);
         return NULL;
     }
+
+    io->connect_cb = connect_cb;
+    io->close_cb = close_cb;
     return io;
 }
+

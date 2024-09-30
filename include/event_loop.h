@@ -39,6 +39,7 @@ int event_loop_wakeup(event_loop_t);
 io_t create_io(event_loop_t loop, int fd, int events, read_cb read_cb, write_cb write_cb);
 void free_io(io_t io);
 io_t get_io(event_loop_t loop, int fd);
+int  io_read_enable(io_t io);
 
 
 // low-level api
@@ -52,6 +53,9 @@ void io_set_read_timeout(io_t io, int timeout);
 void io_set_write_timeout(io_t io, int timeout);
 void io_set_close_timeout(io_t io, int timeout);
 void io_set_connect_timeout(io_t io, int timeout);
+
+event_timer_t add_timer(event_loop_t loop, int timeout, timer_cb cb, int repeat);
+void del_timer(event_loop_t loop, event_timer_t timer);
 
 io_t create_tcp_client(event_loop_t loop, const char *ip, const char *port, connect_cb connect_cb, close_cb close_cb);
 

@@ -3,6 +3,7 @@ set(SOURCES
     event_loop.c
     event.c
     ./dispatcher/select.c
+    io.c
 )
 
 # 创建静态库

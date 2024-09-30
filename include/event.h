@@ -10,6 +10,7 @@ typedef struct event_loop_st event_loop_st, *event_loop_t;
 typedef struct event_timer_st event_timer_st, *event_timer_t;
 typedef struct io_st io_st, *io_t;
 
+typedef void (*timer_cb) (event_timer_t timer);
 typedef void (*event_cb) (event_t *ev);
 
 typedef void (*io_cb) (io_t io);
@@ -36,7 +37,7 @@ typedef enum event_type{
     event_cb cb; \ 
     void *userdata; \ 
     event_t next_event; \
-    unsigned pending;
+    unsigned int pending;
 
 struct event_st {
     EVENT_FILEDS
@@ -47,6 +48,7 @@ struct event_timer_st {
     uint32_t repeat;
     uint64_t next_timeout;
     struct heap_node node;
+    void *privdata;
 };
 
 struct io_st {
@@ -82,6 +84,8 @@ struct io_st {
     event_timer_t write_timer;
     event_timer_t close_timer;
     event_timer_t connect_timer;
+
+    int connect;
 };
 
 struct event_loop_st {
@@ -102,7 +106,7 @@ struct event_loop_st {
     uint32_t npendings;
 
     int pipefd[2]; // pipe[0] for read, pipe[1] for write
-    const struct event_dispatcher *disp;
+    struct event_dispatcher *disp;
     void *disp_data;
 };
 
