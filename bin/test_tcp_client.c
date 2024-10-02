@@ -20,6 +20,7 @@ void on_connect(io_t io) {
 }
 
 void on_close(io_t io) {
+    printf("on close\n");
 
 }
 
@@ -29,6 +30,7 @@ int main(int argc, char *argv[]) {
     }
     event_loop_t loop = event_loop_init();
     io_t io = create_tcp_client(loop, argv[1], argv[2], on_connect, on_close);
+    io_set_readcb(io, on_read);
     
     event_loop_run(loop);
     return 0;

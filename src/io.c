@@ -38,7 +38,6 @@ int io_del(io_t io, int event) {
 
 int create_socket() {
     int client_fd = socket(AF_INET, SOCK_STREAM, 0);
-    make_noblock_fd(client_fd);
     return client_fd; 
 }
 
@@ -57,12 +56,27 @@ static void __timeout_cb(event_timer_t timer) {
 }
 
 static void __connect_cb(io_t io) {
+    struct sockaddr_in servAddr;
+    memset(&servAddr, 0, sizeof(struct sockaddr_in));
+    int peerLen = sizeof(struct sockaddr_in);
+    int ret = getpeername(io->fd, (struct sockaddr *)&servAddr, &peerLen);
+    if (ret < 0) {
+        if (io->close_cb) {
+            io->close_cb(io);
+        }
+        io_del(io, EVENT_WRITE);
+        free_io(io);
+        return ;
+    }
+    char ipAddr[INET_ADDRSTRLEN];
+    printf("connected peer address = %s:%d\n", inet_ntop(AF_INET, &servAddr.sin_addr, ipAddr, sizeof(ipAddr)), ntohs(servAddr.sin_port));
+
     io_del(io, EVENT_WRITE);
     if (io->connect_cb) {
         io->connect_cb(io);
+        io_read_enable(io);
     }
 }
-
 
 void handle_event(io_t io) {
     if ((io->events & EVENT_WRITE) && (io->revents & EVENT_WRITE)) {

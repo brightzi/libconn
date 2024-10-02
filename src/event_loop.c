@@ -208,6 +208,7 @@ io_t create_tcp_client(event_loop_t loop, const char *ip, const char *port, conn
     }
 
     int client_fd = create_socket();
+    make_noblock_fd(client_fd);
     io_t io = get_io(loop, client_fd);
     if (io == NULL) {
         return NULL;

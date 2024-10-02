@@ -27,8 +27,8 @@ const struct event_dispatcher select_dispatcher = {
         "select",
         select_init,
         select_add,
-        select_del,
         select_update,
+        select_del,
         select_run,
         select_destory,
 };
@@ -103,7 +103,7 @@ int select_run(event_loop_t loop, int timeout) {
     int ret = select(disp->max_fd + 1, &read_fds, &write_fds, NULL, &tv);
     if (ret < 0) {
         if (errno != EINTR) {
-            printf("select errno");
+            printf("select errno\n");
         }
         //todo 错误处理
         return -1;
