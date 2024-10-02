@@ -86,6 +86,9 @@ struct io_st {
     event_timer_t connect_timer;
 
     int connect;
+    int connected;
+    int close;
+    int closed;
 };
 
 struct event_loop_st {

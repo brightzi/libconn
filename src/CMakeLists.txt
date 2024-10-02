@@ -2,8 +2,13 @@
 set(SOURCES 
     event_loop.c
     event.c
-    ./dispatcher/select.c
     io.c
+    conn_socket.c
+    ./dispatcher/select.c
+    ./http/HttpClient.cpp
+    ./http/HttpMessage.cpp
+    ./http/HttpParser.cpp
+    ./http/http_parser.c
 )
 
 # 创建静态库

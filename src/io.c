@@ -2,10 +2,14 @@
 #include "event_loop.h"
 #include <fcntl.h>
 #include <errno.h>
+#include <arpa/inet.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #define DEFAULT_TIMEOUT 10000
 
-void make_noblock_fd(int fd) {
+static void make_noblock_fd(int fd) {
     int flags = fcntl(fd, F_GETFL, 0);
     fcntl(fd, F_SETFL, flags | O_NONBLOCK);
 }
@@ -36,8 +40,11 @@ int io_del(io_t io, int event) {
     return 0;
 }
 
-int create_socket() {
+int create_socket(int block) {
     int client_fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (block) {
+        make_noblock_fd(client_fd);
+    }
     return client_fd; 
 }
 
@@ -121,3 +128,7 @@ int io_connect(io_t io) {
     io->connect = 1;
     return io_add(io, handle_event, EVENT_WRITE);
 }
+
+int io_write(io_t io, const void *buf, size_t len) {
+    return write(io->fd, buf, len);
+} 

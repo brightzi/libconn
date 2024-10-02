@@ -13,7 +13,7 @@ void on_read(io_t io, void *buf, int readybytes) {
 
 void on_connect(io_t io) {
     printf("on connect\n");
-    write(io->fd, "hello, world", strlen("hello, world"));
+    io_send_data(io, "hello, world", strlen("hello, world"));
     io_set_readcb(io, on_read);     
     io_read_enable(io);
     return ;

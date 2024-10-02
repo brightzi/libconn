@@ -162,6 +162,15 @@ void free_io(io_t io) {
     }
 }
 
+
+
+int io_send_data(io_t io, const void *buf, size_t len) {
+    if (io->closed) {
+        return -1;
+    }
+    return io_write(io, buf, len);
+}
+
 int io_read_enable(io_t io) {
     io_add(io, handle_event, EVENT_READ);
     return 0;
@@ -207,8 +216,8 @@ io_t create_tcp_client(event_loop_t loop, const char *ip, const char *port, conn
         return NULL;
     }
 
-    int client_fd = create_socket();
-    make_noblock_fd(client_fd);
+    int block = 0;
+    int client_fd = create_socket(block);
     io_t io = get_io(loop, client_fd);
     if (io == NULL) {
         return NULL;
