@@ -10,21 +10,17 @@ event_loop_t event_loop_init() {
 }
 
 void pipe_read_cb(io_t io, void *bufff, int readybytes) {
+    pthread_mutex_lock(&io->loop->mutex);
     char buf[1024];
-    int nread;
-    while ((nread = read(io->fd, buf, 1024)) > 0) {
-        printf("buf : %s\n", buf);
-        if (nread == 0) {
-            if (errno == EAGAIN) {
-                printf("read again\n");
-                break;
-            }
-        } else if (nread > 0) {
-            break;
-        } else {
-            break;
+    int nread = read(io->fd, buf, 1024);
+    for (int i = 0; i < nread; i++) {
+        event_t event = io->loop->custom_events[i]; 
+        if (event->cb) {
+            event->cb(event);
         }
     }
+    io->loop->custom_events_num = 0;
+    pthread_mutex_unlock(&io->loop->mutex);
 }
 
 event_loop_t event_loop_init_with_name(const char *name) {
@@ -53,8 +49,15 @@ event_loop_t event_loop_init_with_name(const char *name) {
 
     loop->disp = &select_dispatcher;
     loop->disp_data = loop->disp->init(loop);
-    io_t io = create_io(loop, loop->pipefd[0], EVENT_READ, pipe_read_cb, NULL); 
+    // io_t io = create_io(loop, loop->pipefd[0], EVENT_READ, pipe_read_cb, NULL); 
+    io_t io = get_io(loop, loop->pipefd[0]);
+    io_add(io, handle_event, EVENT_READ);
+    io_set_readcb(io, pipe_read_cb);
     loop->disp->add(loop, loop->pipefd[0], EVENT_READ);
+
+    loop->custom_events = malloc(sizeof(event_t) * 1024);
+    loop->custom_events_num = 0;
+    loop->max_custom_events_num = 1024;
     return loop;    
 }
 
@@ -95,11 +98,6 @@ int event_loop_wakeup(event_loop_t loop) {
     if (!loop) {
         return -1;
     }   
-    write(loop->pipefd[1], "hello world", strlen("hello world"));
-    write(loop->pipefd[1], "hello world", strlen("hello world"));
-    write(loop->pipefd[1], "hello world", strlen("hello world"));
-    write(loop->pipefd[1], "hello world", strlen("hello world"));
-    write(loop->pipefd[1], "hello world", strlen("hello world"));
     write(loop->pipefd[1], "hello world", strlen("hello world"));
     return 0;
 }
@@ -211,7 +209,7 @@ void del_timer(event_loop_t loop, event_timer_t timer) {
 
 }
 
-io_t create_tcp_client(event_loop_t loop, const char *ip, const char *port, connect_cb connect_cb, close_cb close_cb) {
+io_t create_tcp_client(event_loop_t loop, const char *ip, const char *port, connect_cb connect_cb, close_cb close_cb, void *userdata) {
     if (loop == NULL) {
         return NULL;
     }
@@ -224,14 +222,34 @@ io_t create_tcp_client(event_loop_t loop, const char *ip, const char *port, conn
     }
     io->ip = strdup(ip);
     io->port = strdup(port);
+    io->connect_cb = connect_cb;
+    io->close_cb = close_cb;
+    io->userdata = userdata;
+
     int ret = io_connect(io);
     if (ret != 0) {
         free_io(io);
         return NULL;
     }
-
-    io->connect_cb = connect_cb;
-    io->close_cb = close_cb;
     return io;
 }
 
+
+void loop_post_event(event_loop_t loop, event_t event) {
+    if (loop == NULL) {
+        return ;
+    }
+    if (event == NULL) {
+        return ;
+    }
+    
+    pthread_mutex_lock(&loop->mutex);
+    int nwrite = write(loop->pipefd[1], "h", 1);
+    if (nwrite != 1) {
+        pthread_mutex_unlock(&loop->mutex);
+        return ;
+    }
+    loop->custom_events[loop->custom_events_num++] = event;
+    pthread_mutex_unlock(&loop->mutex);
+    return ;
+}

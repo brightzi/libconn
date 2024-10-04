@@ -119,6 +119,7 @@ int io_connect(io_t io) {
     if (ret < 0 && errno != EINPROGRESS) {
         return -1;
     } else if (ret == 0) {
+        __connect_cb(io);
         return 0;
     }
 

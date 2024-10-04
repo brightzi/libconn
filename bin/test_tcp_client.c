@@ -29,7 +29,7 @@ int main(int argc, char *argv[]) {
         return -1;
     }
     event_loop_t loop = event_loop_init();
-    io_t io = create_tcp_client(loop, argv[1], argv[2], on_connect, on_close);
+    io_t io = create_tcp_client(loop, argv[1], argv[2], on_connect, on_close, NULL);
     io_set_readcb(io, on_read);
     
     event_loop_run(loop);

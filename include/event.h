@@ -1,7 +1,11 @@
 #ifndef EVENT_H
 #define EVENT_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 #include <stdint.h>
+#include <pthread.h>
 #include "dispatcher.h"
 #include "heap.h"
 
@@ -11,7 +15,7 @@ typedef struct event_timer_st event_timer_st, *event_timer_t;
 typedef struct io_st io_st, *io_t;
 
 typedef void (*timer_cb) (event_timer_t timer);
-typedef void (*event_cb) (event_t *ev);
+typedef void (*event_cb) (event_t ev);
 
 typedef void (*io_cb) (io_t io);
 typedef void (*read_cb) (io_t io, void *buf, int readybytes);
@@ -89,6 +93,7 @@ struct io_st {
     int connected;
     int close;
     int closed;
+    void *ctx;
 };
 
 struct event_loop_st {
@@ -111,9 +116,17 @@ struct event_loop_st {
     int pipefd[2]; // pipe[0] for read, pipe[1] for write
     struct event_dispatcher *disp;
     void *disp_data;
+
+    event_t **custom_events;
+    int custom_events_num;
+    int max_custom_events_num;
+    pthread_mutex_t mutex; //lock custom events & coustom_events_num
 };
 
 void event_pending(event_t ev);
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif
