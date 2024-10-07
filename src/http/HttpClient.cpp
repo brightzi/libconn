@@ -115,6 +115,8 @@ int HttpClient::async_send(HttpRequest *req, HttpResponseCallback callback) {
     }
     task->req = req;
     task->cb = std::move(callback);
+    task->parser = new HttpParser();
+    task->parser->initHttpResponse(new HttpResponse());
     task->start_time = get_curtime_ms();
     m_loop_thread->getLoop()->postEvent(std::bind(&HttpClient::doTask, this, task));
     return 0;
@@ -263,8 +265,24 @@ void HttpClient::doTask(http_task_t task) {
     channel->onread = [this, channel, io](Buffer *buf) {
         const char *data = buf->view_data();
         int size = buf->readable_size();
+        http_task_t task = (http_task_t) channel->m_ctx;
         printf("readdata : %s", data);
-        channel->close();
+        int nparse = task->parser->feedRecvData(data, size);
+        if (nparse != size) {
+            channel->close();
+            return ;
+        }
+
+        if (task->parser->isComplete()) {
+            printf("task is already \n");
+            HttpResponse *resp = (HttpResponse *)task->parser->resp;
+            if (io->keepalive && resp->getHeader("Connection") == "keep-alive") {
+                printf("keepalive\n");
+            } else {
+                printf("no keepalive\n");
+                channel->close();
+            }
+        }
     };
 
     channel->onwrite = [&io](Buffer *buf) {
@@ -273,6 +291,7 @@ void HttpClient::doTask(http_task_t task) {
 
     channel->onclose = [this, io]() {
         removeChannel(io->fd);
+        printf("close \n");
     };
 
     channel->startConnect();

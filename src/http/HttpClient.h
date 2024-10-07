@@ -11,8 +11,11 @@ typedef struct http_task_st {
     HttpRequest *req;
     HttpResponseCallback cb;
     uint64_t start_time;
+    HttpParser *parser;
     http_task_st() {
+
     }
+
     ~http_task_st() {
         printf("task delete\n");
     }

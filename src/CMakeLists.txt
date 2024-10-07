@@ -10,7 +10,7 @@ set(SOURCES
     Buffer.cpp
     ./dispatcher/select.c
     ./http/HttpClient.cpp
-    ./http/HttpMessage.cpp
+    # ./http/HttpMessage.cpp
     ./http/HttpParser.cpp
     ./http/http_parser.c
     

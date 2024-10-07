@@ -27,7 +27,7 @@ public:
     http_parser  parser;
 
     int invokeHttpCb(const char* data = NULL, size_t size = 0);
-    int initHttpRequest(HttpRequest *req) {
+    int initHttpRequest(HttpMessage *req) {
         if (!req) {
             return -1;
         }
@@ -35,7 +35,7 @@ public:
         return 0;
     }
 
-    int initHttpResponse(HttpResponse *resp) {
+    int initHttpResponse(HttpMessage *resp) {
         if (!resp) {
             return -1;
         }

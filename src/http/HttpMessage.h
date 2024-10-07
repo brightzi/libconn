@@ -78,11 +78,17 @@ public:
         
     }
 
+    const std::string & getHeader(const std::string& key) {
+        if (headers.find(key) == headers.end()) {
+            return std::string("");
+        }
+        return headers[key];
+    }
+
     http_headers headers;
     std::string body;
     HTTP_CODE code;
     void *userdata;
-
 };
 
 typedef std::shared_ptr<HttpRequest>    HttpRequestPtr;

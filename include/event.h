@@ -106,6 +106,7 @@ struct io_st {
     event_timer_t close_timer;
     event_timer_t connect_timer;
 
+    int keepalive;
     int connect;
     int connected;
     int close;
