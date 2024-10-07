@@ -34,15 +34,18 @@ int Buffer::append(void *buf, size_t bytes) {
             return -1;
         }
         m_buf->cap = DEFAULT_CAPCITY;
+        m_buf->read_index = 0;
+        m_buf->write_index = 0;
     }
 
-    if (writeable_size() + bytes >= m_buf->cap) {
-        char *buf = (char *)realloc(m_buf->data, m_buf->cap * 2);
+    if (writeable_size() <= bytes) {
+        size_t new_cap = m_buf->cap + bytes;
+        char *buf = (char *)realloc(m_buf->data, new_cap);
         if (buf == NULL) {
             return -1;
         }
         m_buf->data = buf;
-        m_buf->cap *= 2;
+        m_buf->cap = new_cap;
         memset(m_buf->data + m_buf->write_index, 0, m_buf->cap - m_buf->write_index);
     }
     memcpy(m_buf->data + m_buf->write_index, buf, bytes);

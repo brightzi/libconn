@@ -13,6 +13,7 @@ typedef struct event_st event_st, *event_t;
 typedef struct event_loop_st event_loop_st, *event_loop_t;
 typedef struct event_timer_st event_timer_st, *event_timer_t;
 typedef struct io_st io_st, *io_t;
+typedef struct buffer_st buffer_st, *buffer_t;
 
 typedef void (*timer_cb) (event_timer_t timer);
 typedef void (*event_cb) (event_t ev);
@@ -55,6 +56,19 @@ struct event_timer_st {
     void *privdata;
 };
 
+struct buffer_st {
+    char *base;
+    size_t len;
+    size_t head;
+    size_t tail;
+};
+
+typedef enum io_type {
+    io_tcp,
+    io_udp,
+    io_pipe
+}io_type;
+
 struct io_st {
     EVENT_FILEDS
     int fd;
@@ -64,6 +78,9 @@ struct io_st {
 
     uint64_t last_read_time;
     uint64_t last_write_time;
+    buffer_t read_buf;
+    buffer_t write_buf;
+    io_type type;
 
     int connect_timeout; 
     int close_timeout;

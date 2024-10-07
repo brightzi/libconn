@@ -44,6 +44,7 @@ void free_io(io_t io);
 io_t get_io(event_loop_t loop, int fd);
 int  io_read_enable(io_t io);
 int  io_send_data(io_t io, const void *buf, size_t len);
+void io_close(io_t io);
 
 // low-level api
 void io_set_readcb(io_t io, read_cb cb);

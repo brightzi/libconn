@@ -37,15 +37,22 @@ int main(int argc, char *argv[]) {
         req.method = conn::HTTP_POST;
         // req.headers["Content-Type"] = "application/json";
         req.timeout = 1000000;
-        req.body = "hello worldkkfafafafffffffffffffffffffffffff";
+        req.body = "111";
 
         HttpResponse resp;
         
         int ret = client.async_send(&req, onHttpResponse);
+        sleep(1);
         if (ret != 0) {
             return -1;
         }
+        req.body = "222";
+        client.async_send(&req, onHttpResponse);
+        sleep(1);
 
+        req.body = "333";
+        client.async_send(&req, onHttpResponse);
+        sleep(1);
         while(1) {
             sleep(100000);
         }

@@ -251,7 +251,7 @@ void HttpClient::doTask(http_task_t task) {
     io->ip = strdup(task->req->u->host);
     io->port = strdup(port);
     addChannel(io);
-    Channel *channel = getChannel(client_fd);
+    Channel * channel = getChannel(client_fd);
     channel->m_ctx = task;
     io->ctx = channel;
 
@@ -260,17 +260,18 @@ void HttpClient::doTask(http_task_t task) {
         sendHttpRequest(channel);
     };
 
-    channel->onread = [&io](Buffer *buf) {
+    channel->onread = [this, channel, io](Buffer *buf) {
         const char *data = buf->view_data();
         int size = buf->readable_size();
         printf("readdata : %s", data);
+        channel->close();
     };
 
     channel->onwrite = [&io](Buffer *buf) {
-
+        printf("write finish\n");
     };
 
-    channel->onclose = [this, &io]() {
+    channel->onclose = [this, io]() {
         removeChannel(io->fd);
     };
 
@@ -286,13 +287,16 @@ void HttpClient::addChannel(io_t io) {
 }
 
 Channel* HttpClient::getChannel(int fd) {
+    printf("channel address: %p\n", m_channels[fd]);
     return m_channels[fd];
 }
 
 void HttpClient::removeChannel(int fd) {
     Channel *channel = m_channels[fd];
+    http_task_t task = (http_task_t) channel->m_ctx;
     m_channels.erase(fd);
     delete channel;
+    delete task;
 }
     
 }

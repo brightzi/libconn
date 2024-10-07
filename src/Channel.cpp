@@ -14,17 +14,14 @@ Channel::Channel(io_t io) {
 }
 
 Channel::~Channel() {
-
+    printf("channel delete\n");
 }
 
 static void on_read(io_t io, void* data, int readbytes) {
     Channel* channel = (Channel*)io->ctx;
     if (channel && channel->onread) {
-        char buf[1024];
-        read(io->fd, buf, 1024);
-        printf("read %s\n", buf);
-        // Buffer buf(data, readbytes);
-        // channel->onread(&buf);
+        channel->getReadBuff()->append(data, readbytes);
+        channel->onread(channel->getReadBuff());
     }
 }
 
@@ -66,6 +63,10 @@ void Channel::startConnect() {
 
 void Channel::sendData(const char *buf, int len) {
     io_write(m_io, buf, len);
+}
+
+void Channel::close() {
+    io_close(m_io);
 }
 
 }

@@ -85,6 +85,40 @@ static void __connect_cb(io_t io) {
     }
 }
 
+void __read_cb(io_t io) {
+    char *buf = io->read_buf->base + io->read_buf->tail;
+    int len = io->read_buf->len - io->read_buf->tail;
+    int nread = read(io->fd, buf, len);
+    if (nread + io->read_buf->tail == io->read_buf->len) {
+        ///关闭链接
+        io_close(io);
+        return ;
+    }
+
+    if (nread < 0) {
+        if (errno == EAGAIN) {
+            return;
+        } else {
+            io_close(io);
+        }
+    } else if (nread == 0) {
+        io_close(io);
+        return ;
+    }
+
+    io->read_buf->tail += nread;
+    if (nread < io->read_buf->len) {
+        buf[nread] = '\0';
+    }
+
+    if (io->read_cb) {
+        io->read_cb(io, buf, nread);
+        io->read_buf->tail = 0;
+        io->read_buf->head = 0;
+    }
+    return ;
+}
+
 void handle_event(io_t io) {
     if ((io->events & EVENT_WRITE) && (io->revents & EVENT_WRITE)) {
         if (io->connect) {
@@ -98,8 +132,10 @@ void handle_event(io_t io) {
     }
 
     if ((io->events & EVENT_READ) && (io->revents & EVENT_READ)) {
-        if (io->read_cb) {
+        if (io->type == io_pipe) {
             io->read_cb(io, NULL, 0);
+        } else if (io->type == io_tcp) {
+            __read_cb(io);
         }
     }
 }

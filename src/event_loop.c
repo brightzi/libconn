@@ -3,6 +3,8 @@
 #include "dispatcher.h"
 #include "io.h"
 
+#define MAX_IO_BUF_SIZE 1024 * 1024 * 4
+
 extern const struct event_dispatcher select_dispatcher;
 
 event_loop_t event_loop_init() {
@@ -51,11 +53,16 @@ event_loop_t event_loop_init_with_name(const char *name) {
     loop->disp_data = loop->disp->init(loop);
     // io_t io = create_io(loop, loop->pipefd[0], EVENT_READ, pipe_read_cb, NULL); 
     io_t io = get_io(loop, loop->pipefd[0]);
+    io->type = io_pipe;
     io_add(io, handle_event, EVENT_READ);
     io_set_readcb(io, pipe_read_cb);
     loop->disp->add(loop, loop->pipefd[0], EVENT_READ);
 
     loop->custom_events = malloc(sizeof(event_t) * 1024);
+    if (loop->custom_events == NULL) {
+        free(loop);
+        return NULL;
+    }
     loop->custom_events_num = 0;
     loop->max_custom_events_num = 1024;
     return loop;    
@@ -129,8 +136,37 @@ io_t get_io(event_loop_t loop, int fd) {
     memset(io, 0, sizeof(io_st));
     io->fd = fd;
     io->loop = loop;
+    io->type = io_tcp;
     loop->io_array[fd] = io;
     loop->io_num++;
+
+    io->read_buf = (buffer_t)malloc(sizeof(buffer_st));
+    if (io->read_buf == NULL) {
+        return NULL;
+    }
+    io->write_buf = (buffer_t)malloc(sizeof(buffer_st));
+    if (io->write_buf == NULL) {
+        return NULL;
+    }
+
+    char *tmp = (char *)malloc(MAX_IO_BUF_SIZE);
+    if (tmp == NULL) {
+        return NULL;
+    }
+    io->read_buf->base = tmp;
+    io->read_buf->len = MAX_IO_BUF_SIZE;
+    io->read_buf->head = 0;
+    io->read_buf->tail = 0;
+
+    tmp = (char *)malloc(MAX_IO_BUF_SIZE);
+    if (tmp == NULL) {
+        return NULL;
+    }
+
+    io->write_buf->base = tmp;
+    io->write_buf->len = MAX_IO_BUF_SIZE;
+    io->write_buf->head = 0;
+    io->write_buf->tail = 0;
     return io;
 }
 
@@ -153,11 +189,23 @@ void free_io(io_t io) {
     // close socket
     //free io
     if (io) {
-        if (io->fd) {
-            close_socket(io);
-        }
         free(io);
     }
+}
+
+void io_close(io_t io) {
+    if (io->closed) {
+        return;
+    }
+    io->closed = 1;
+    io->loop->disp->del(io->loop, io->fd, EVENT_READ | EVENT_WRITE);
+    if (io->close_cb) {
+        io->close_cb(io);
+    }
+    if (io->fd) {
+        close_socket(io);
+    }
+    free_io(io);
 }
 
 

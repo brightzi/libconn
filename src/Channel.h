@@ -20,8 +20,13 @@ public:
 
     void startConnect();
     void sendData(const char *buf, int len);
+    void close();
 
     void *m_ctx;
+
+    Buffer *getReadBuff() {
+        return m_readBuffer;
+    }
 
 private:
     Buffer *m_readBuffer;
