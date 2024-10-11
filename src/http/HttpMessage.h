@@ -4,6 +4,7 @@
 #include <map>
 #include <memory>
 #include <functional>
+#include <string.h>
 
 namespace conn {
 typedef enum HTTP_METHOD {
@@ -51,6 +52,40 @@ public:
 
     }
 
+    int parseUrl() {
+        char temp[1024] = {0};
+        strcpy(temp, url.c_str());
+        char *scheme_ptr = strstr(temp, "://");
+        if (scheme_ptr == NULL) {
+            return -1;
+        }
+        *scheme_ptr = '\0';
+        strcpy(u->scheme, temp);
+
+        char *host_ptr = scheme_ptr + 3;
+        char *port_ptr = strchr(host_ptr, ':');
+        if (port_ptr != NULL) {
+            *port_ptr = '\0';
+            strcpy(u->host, host_ptr);
+            host_ptr = port_ptr + 1;
+        } else {
+            return 0;
+        }
+
+        // 解析端口和路径
+        char *path_ptr = strchr(host_ptr, '/');
+        if (path_ptr != NULL) {
+            *path_ptr = '\0';
+            u->port = atoi(host_ptr);
+            strcpy(u->path, path_ptr+1);
+        } else {
+            u->port = atoi(host_ptr);
+            strcpy(u->path, "/");
+        }
+
+        return 0;
+    }
+
     std::string url;
     url_t u;
     HTTP_METHOD method;
@@ -66,6 +101,13 @@ public:
     void setTimeout(int timeout) {
         this->timeout = timeout;
     }
+
+    std::string dump(bool is_dump_headers, bool is_dump_body);
+
+    void dumpHeaders(std::string &str);
+
+    void dumpBody(std::string &str);
+
 };
 
 
@@ -88,6 +130,7 @@ public:
     http_headers headers;
     std::string body;
     HTTP_CODE code;
+    int status_code;
     void *userdata;
 };
 

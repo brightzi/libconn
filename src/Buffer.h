@@ -16,10 +16,9 @@ public:
     Buffer();
     ~Buffer();
 
-    char *view_data();
-    void remove(size_t len);
-    int append(void *buf, size_t bytes);
-    int readable_size();
+    void *data();
+    int setdata(void *buf, size_t bytes);
+    int size();
     int writeable_size();
 private:
     buffer_t m_buf;

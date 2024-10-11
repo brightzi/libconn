@@ -5,7 +5,6 @@
 #include "httpdef.h"
 #include <string>
 
-
 namespace conn {
 
 class HttpParser {
@@ -46,7 +45,11 @@ public:
 
     http_parser_state state;
     bool isComplete();
+
+    int getError();
 };
+
+typedef std::shared_ptr<HttpParser> HttpParserPtr;
 
 }
 

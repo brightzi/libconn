@@ -20,7 +20,7 @@ Channel::~Channel() {
 static void on_read(io_t io, void* data, int readbytes) {
     Channel* channel = (Channel*)io->ctx;
     if (channel && channel->onread) {
-        channel->getReadBuff()->append(data, readbytes);
+        channel->getReadBuff()->setdata(data, readbytes);
         channel->onread(channel->getReadBuff());
     }
 }

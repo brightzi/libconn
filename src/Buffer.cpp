@@ -19,11 +19,10 @@ Buffer::~Buffer() {
     }
 }
 
-int Buffer::append(void *buf, size_t bytes) {
+int Buffer::setdata(void *buf, size_t bytes) {
     if (!buf) {
         return -1;
     }
-
     if (m_buf == NULL) {
         m_buf = (buffer_t)calloc(sizeof(buffer_st), 1);
         if (!m_buf) {
@@ -48,12 +47,14 @@ int Buffer::append(void *buf, size_t bytes) {
         m_buf->cap = new_cap;
         memset(m_buf->data + m_buf->write_index, 0, m_buf->cap - m_buf->write_index);
     }
+    m_buf->write_index = 0;
+    memset(m_buf->data, 0, m_buf->cap);
     memcpy(m_buf->data + m_buf->write_index, buf, bytes);
     m_buf->write_index += bytes;
     return 0;
 }
 
-int Buffer::readable_size() {
+int Buffer::size() {
     return m_buf->write_index - m_buf->read_index;
 }
 
@@ -61,19 +62,8 @@ int Buffer::writeable_size() {
     return m_buf->cap - m_buf->write_index;
 }
 
-char *Buffer::view_data() {
-    if (m_buf->read_index == m_buf->write_index) {
-        return NULL;
-    }
-    return m_buf->data + m_buf->read_index;
-}
-
-void Buffer::remove(size_t len) {
-    m_buf->read_index += len;
-    if (m_buf->read_index == m_buf->write_index) {
-        m_buf->read_index = 0;
-        m_buf->write_index = 0;
-    }
+void *Buffer::data() {
+    return m_buf->data;
 }
 
 }

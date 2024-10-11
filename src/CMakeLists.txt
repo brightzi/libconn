@@ -3,6 +3,7 @@ set(SOURCES
     event_loop.c
     event.c
     io.c
+    base64.c
     conn_socket.c
     EventLoop.cpp
     EventLoopThread.cpp
@@ -13,7 +14,7 @@ set(SOURCES
     # ./http/HttpMessage.cpp
     ./http/HttpParser.cpp
     ./http/http_parser.c
-    
+    ./http/WebSocketClient.cpp
 )
 
 # 创建静态库

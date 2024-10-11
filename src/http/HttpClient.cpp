@@ -263,8 +263,8 @@ void HttpClient::doTask(http_task_t task) {
     };
 
     channel->onread = [this, channel, io](Buffer *buf) {
-        const char *data = buf->view_data();
-        int size = buf->readable_size();
+        const char *data = (const char *)buf->data();
+        int size = buf->size();
         http_task_t task = (http_task_t) channel->m_ctx;
         printf("readdata : %s", data);
         int nparse = task->parser->feedRecvData(data, size);

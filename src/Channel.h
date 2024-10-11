@@ -3,8 +3,10 @@
 #include "event_loop.h"
 #include "Buffer.h"
 #include <functional>
+#include <memory>
 
 namespace conn {
+
 
 class Channel {
 public:
@@ -34,6 +36,9 @@ private:
     io_t m_io;
 };
 
+typedef std::shared_ptr<Channel> ChannelPtr;
+
 }
+
 
 #endif
