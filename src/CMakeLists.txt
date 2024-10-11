@@ -15,6 +15,7 @@ set(SOURCES
     ./http/HttpParser.cpp
     ./http/http_parser.c
     ./http/WebSocketClient.cpp
+    ./http/WebSocketParser.cpp
 )
 
 # 创建静态库

@@ -2,6 +2,7 @@
 #define WEB_SOCKET_CLIENT_H
 #include "HttpMessage.h"
 #include "HttpParser.h"
+#include "WebSocketParser.h"
 #include "EventLoopThread.h"
 #include "Channel.h"
 
@@ -46,6 +47,7 @@ private:
     HttpParserPtr m_httpParser; 
     HttpRequestPtr m_httpRequest;
     HttpResponsePtr m_httpReponse;
+    WebSocketParserPtr m_wsParser;
     ChannelPtr m_channel;
     EventLoopThread *m_loop_thread;
     ws_state m_wsState;

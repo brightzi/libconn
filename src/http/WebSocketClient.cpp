@@ -46,6 +46,7 @@ int WebSocketClient::sendHttpRequest() {
     str.append("\r\n");
     m_httpParser = std::make_shared<HttpParser>();
     m_httpReponse = std::make_shared<HttpResponse>();
+    m_wsParser = std::make_shared<WebSocketParser>();
     m_httpParser->initHttpResponse(m_httpReponse.get());
     m_channel->sendData(str.c_str(), str.length());
     m_wsState = WS_STATE_UPGRADING;
@@ -106,15 +107,18 @@ int WebSocketClient::open(const char *url, const http_headers & headers) {
             m_wsState = WS_STATE_OPENED;
             if (onopen) {
                 onopen();
+                m_wsParser->onMessage = [this](int opcode, const std::string &msg) {
+                    if (onmessage) {
+                        onmessage(msg.c_str(), msg.size());
+                    }
+                };
             }
         }
 
         if (m_wsState == WS_STATE_OPENED && size > 0) {
             // TODO: parse websocket frame
             // printf("ws onread:%s\n", data);
-            if (onmessage) {
-                onmessage(data, size);
-            }
+            m_wsParser->feedRecvData(data, size);
         }
     };
 
