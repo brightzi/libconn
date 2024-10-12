@@ -1,7 +1,18 @@
 #include "event_loop.h"
-#include "timer.h"
+#include "ctimer.h"
 #include "dispatcher.h"
 #include "io.h"
+#include "heap.h"
+
+
+#define container_of(ptr, type, member) \
+((type*)((char*)(ptr) - offsetof(type, member)))
+
+#define TIMER_ENTRY(p)          container_of(p, struct event_timer_st, node)
+
+static int timers_compare(const struct heap_node* lhs, const struct heap_node* rhs) {
+    return TIMER_ENTRY(lhs)->next_timeout < TIMER_ENTRY(rhs)->next_timeout;
+}
 
 #define MAX_IO_BUF_SIZE 1024 * 1024 * 4
 
@@ -46,6 +57,7 @@ event_loop_t event_loop_init_with_name(const char *name) {
     loop->io_maxsize = 1024;
     loop->pending = NULL;
     loop->npendings = 0;
+    heap_init(&loop->timers, timers_compare);
     
     pipe(loop->pipefd);
 
@@ -80,16 +92,55 @@ int event_loop_destory(event_loop_t loop) {
     free(loop);
 }
 
+void process_timer(event_loop_t loop) { 
+
+    struct heap *timers = &loop->timers;
+    event_timer_t timer = NULL;
+    while(timers->root) {
+        timer = TIMER_ENTRY(timers->root);
+        if (timer->next_timeout > loop->cur_ms) {
+            break;
+        }
+
+        if (timer->repeat == 0) {
+            del_timer(loop, timer);
+        } else {
+            heap_insert(timers, &timer->node);
+        }
+        event_pending(timer);
+    }
+    
+    return ;
+}
+
 int event_loop_run(event_loop_t loop) {
     if (!loop) {
         return -1;
     }
     while (!loop->quit) {
-        if (loop->io_num > 0) {
-            loop->disp->run(loop, 1000);
-        } else {
-            sleep_ms(10);
+        int blocktime_ms = 10;
+        if (loop->timers_num > 0) {
+            update_loop_timer(loop);
+            if (loop->timers.root) {
+                int64_t min_timeout = TIMER_ENTRY(loop->timers.root)->next_timeout - loop->cur_ms;
+                blocktime_ms = min_timeout < blocktime_ms ? min_timeout : blocktime_ms;
+            }
+
+            if (blocktime_ms < 0) {
+                // process timer
+                if (loop->timers_num > 0) {
+                    process_timer(loop);
+                }
+                continue;
+            }
         }
+
+        if (loop->io_num > 0) {
+            loop->disp->run(loop, blocktime_ms);
+        } else {
+            sleep_ms(blocktime_ms);
+        }
+        update_loop_timer(loop);
         process_pending_event(loop);
     }
     return 0;
@@ -109,12 +160,16 @@ int event_loop_wakeup(event_loop_t loop) {
     return 0;
 }
 
+void update_loop_timer(event_loop_t loop) {
+    loop->cur_ms = get_monotime_ms();
+}
+
 void process_pending_event(event_loop_t loop) {
     if (!loop) {
         return -1;
     }
 
-    io_t io = loop->pending;
+    event_t io = loop->pending;
     while(io) {
         if (io->cb) {
             io->cb(io);
@@ -243,18 +298,29 @@ void io_set_acceptcb(io_t io, accept_cb cb) {
 }
 
 event_timer_t add_timer(event_loop_t loop, int timeout, timer_cb cb, int repeat) {
+    if (timeout == 0) {
+        return NULL;
+    }
+
     event_timer_t timer = malloc(sizeof(event_timer_st));
     if (!timer) {
         return NULL;
     } 
 
+    update_loop_timer(loop);
+    timer->timeout = timeout;
+    timer->next_timeout = loop->cur_ms + timeout;
     timer->cb = cb;
     timer->repeat = repeat;
+    timer->loop = loop;
+    heap_insert(&loop->timers, &timer->node);
+    loop->timers_num++;
     return timer;
 }
 
 void del_timer(event_loop_t loop, event_timer_t timer) {
-
+    timer->loop->timers_num--; 
+    heap_remove(&loop->timers, &timer->node);
 }
 
 io_t create_tcp_client(event_loop_t loop, const char *ip, const char *port, connect_cb connect_cb, close_cb close_cb, void *userdata) {

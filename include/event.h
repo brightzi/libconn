@@ -52,6 +52,7 @@ struct event_timer_st {
     EVENT_FILEDS
     uint32_t repeat;
     uint64_t next_timeout;
+    uint64_t timeout;
     struct heap_node node;
     void *privdata;
 };
