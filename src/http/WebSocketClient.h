@@ -8,14 +8,6 @@
 
 namespace conn {
 
-typedef enum ws_opcode {
-    WS_OPCODE_CONTINUE = 0x0,
-    WS_OPCODE_TEXT     = 0x1,
-    WS_OPCODE_BINARY   = 0x2,
-    WS_OPCODE_CLOSE    = 0x8,
-    WS_OPCODE_PING     = 0x9,
-    WS_OPCODE_PONG     = 0xA
-} ws_opcode;
 
 typedef enum ws_state {
     WS_STATE_CONNECTING = 0,
@@ -39,6 +31,8 @@ public:
     void send(const char *msg, int len, ws_opcode opcode);
 
     void close();
+
+    bool isConnected();
 
 private:
     int sendHttpRequest();

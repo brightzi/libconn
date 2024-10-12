@@ -134,12 +134,21 @@ int WebSocketClient::open(const char *url, const http_headers & headers) {
 }
 
 void WebSocketClient::send(const char *msg, int len, ws_opcode opcode) {
+    int send_len = 0;
+    const char *data = m_wsParser->buildFrame(msg, len, WS_OPCODE_TEXT, send_len);
+    if (data == NULL || send_len == 0) {
+        return ;
+    }
 
-
+    m_channel->sendData(data, send_len);
 }
 
 void WebSocketClient::close() {
+    m_channel->close();
+}
 
+bool WebSocketClient::isConnected() {
+    return m_wsState == WS_STATE_OPENED;
 }
 
 }
