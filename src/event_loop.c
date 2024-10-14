@@ -63,7 +63,6 @@ event_loop_t event_loop_init_with_name(const char *name) {
 
     loop->disp = &select_dispatcher;
     loop->disp_data = loop->disp->init(loop);
-    // io_t io = create_io(loop, loop->pipefd[0], EVENT_READ, pipe_read_cb, NULL); 
     io_t io = get_io(loop, loop->pipefd[0]);
     io->type = io_pipe;
     io_add(io, handle_event, EVENT_READ);
@@ -93,7 +92,6 @@ int event_loop_destory(event_loop_t loop) {
 }
 
 void process_timer(event_loop_t loop) { 
-
     struct heap *timers = &loop->timers;
     event_timer_t timer = NULL;
     while(timers->root) {
@@ -303,6 +301,7 @@ event_timer_t add_timer(event_loop_t loop, int timeout, timer_cb cb, int repeat)
     }
 
     event_timer_t timer = malloc(sizeof(event_timer_st));
+    printf("malloc timer:%p\n", timer);
     if (!timer) {
         return NULL;
     } 
@@ -320,6 +319,7 @@ event_timer_t add_timer(event_loop_t loop, int timeout, timer_cb cb, int repeat)
 
 void del_timer(event_loop_t loop, event_timer_t timer) {
     timer->loop->timers_num--; 
+    printf("delete timer:%p\n", timer);
     heap_remove(&loop->timers, &timer->node);
 }
 

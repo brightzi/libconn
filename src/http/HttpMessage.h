@@ -38,7 +38,7 @@ public:
     }
 
     virtual ~HttpMessage() {
-        
+
     }
 };
 
@@ -49,7 +49,7 @@ public:
     }
 
     virtual ~HttpRequest() {
-
+        printf("~httpRequest\n");
     }
 
     int parseUrl() {
@@ -117,7 +117,7 @@ public:
 
     }
     virtual ~HttpResponse() {
-        
+        printf("~httpResponse\n");
     }
 
     const std::string & getHeader(const std::string& key) {

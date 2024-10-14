@@ -122,7 +122,7 @@ HttpParser::HttpParser() {
 }
 
 HttpParser::~HttpParser() {
-    
+    printf("~HttpParser\n"); 
 }
 
 int HttpParser::feedRecvData(const char *data, size_t len) {

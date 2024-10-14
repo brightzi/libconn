@@ -27,6 +27,7 @@ int main(int argc, char *argv[]) {
     ws->onopen = onopen;
     ws->onmessage = onMessage;
     ws->onclose = onClose;
+    ws->closeAfterTime(10000);
 
     // WebSocketClient *ws2 = new WebSocketClient();
     // ws2->open("http://127.0.0.1:8888", headers);
@@ -46,6 +47,7 @@ int main(int argc, char *argv[]) {
         } 
         ws->send(str, strlen(str), WS_OPCODE_TEXT);
         sleep(1);
+
     }
 
     return 0;

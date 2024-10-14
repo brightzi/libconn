@@ -134,6 +134,9 @@ int WebSocketClient::open(const char *url, const http_headers & headers) {
 }
 
 void WebSocketClient::send(const char *msg, int len, ws_opcode opcode) {
+    if (m_wsState != WS_STATE_OPENED) {
+        return ;
+    }
     int send_len = 0;
     const char *data = m_wsParser->buildFrame(msg, len, WS_OPCODE_TEXT, send_len);
     if (data == NULL || send_len == 0) {
@@ -145,10 +148,28 @@ void WebSocketClient::send(const char *msg, int len, ws_opcode opcode) {
 
 void WebSocketClient::close() {
     m_channel->close();
+    m_wsState = WS_STATE_CLOSED;
 }
 
 bool WebSocketClient::isConnected() {
     return m_wsState == WS_STATE_OPENED;
+}
+
+static void timer_callback(event_timer_t timer) {
+    printf("timer_trigger\n");
+    WebSocketClient *client = (WebSocketClient *)timer->privdata;
+    client->close();
+    
+    sleep(1);
+    std::map<std::string, std::string> headers;
+    // ws->open("http://127.0.0.1:8888", headers);
+    client->open("http://124.222.224.186:8800", headers);
+    client->closeAfterTime(3000);
+}
+
+void WebSocketClient::closeAfterTime(int time_ms) {
+    event_timer_t timer = add_timer(m_loop_thread->getLoop()->loop(), 3000, timer_callback, 0);
+    timer->privdata = this;
 }
 
 }

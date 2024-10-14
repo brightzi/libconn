@@ -34,6 +34,8 @@ public:
 
     bool isConnected();
 
+    void closeAfterTime(int time_ms);
+
 private:
     int sendHttpRequest();
 
