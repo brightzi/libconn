@@ -320,7 +320,8 @@ event_timer_t add_timer(event_loop_t loop, int timeout, timer_cb cb, int repeat)
 void del_timer(event_loop_t loop, event_timer_t timer) {
     timer->loop->timers_num--; 
     printf("delete timer:%p\n", timer);
-    heap_remove(&loop->timers, &timer->node);
+    heap_remove(&loop->timers, &(timer->node));
+    // heap_dequeue(&loop->timers);
 }
 
 io_t create_tcp_client(event_loop_t loop, const char *ip, const char *port, connect_cb connect_cb, close_cb close_cb, void *userdata) {

@@ -34,6 +34,7 @@ int main() {
         heap_dequeue(timers);
         min_timeout = TIMER_ENTRY(timers->root)->next_timeout;
         printf("min timeout:%ld\n", min_timeout);
+        heap_dequeue(timers);
     }
 
 

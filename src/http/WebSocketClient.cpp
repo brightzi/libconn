@@ -21,10 +21,6 @@ WebSocketClient::~WebSocketClient() {
 }
 
 int WebSocketClient::sendHttpRequest() {
-
-    // std::string str = "GET / HTTP/1.1\r\nSec-WebSocket-Version: 13\r\nSec-WebSocket-Key: St/9ZjRDT6QAmTaAuNIi8Q==\r\nConnection: Upgrade\r\nUpgrade: websocket\r\nSec-WebSocket-Extensions: permessage-deflate; client_max_window_bits\r\nHost: 127.0.0.1:8888\r\n\r\n";
-    // m_channel->sendData(str.c_str(), str.length());
-
     m_httpRequest->headers["Connection"] = "Upgrade";
     m_httpRequest->headers["Upgrade"] = "websocket";
 
