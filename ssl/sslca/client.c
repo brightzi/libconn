@@ -78,6 +78,7 @@ int main() {
         printf("Received message: %s\n", buffer);
     }
 
+    SSL_shutdown(ssl);
     SSL_free(ssl);  /* 释放 SSL 资源 */
     close(sock);  /* 关闭 socket */
 

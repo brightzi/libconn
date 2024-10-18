@@ -10,10 +10,12 @@ set(INCLUDES ./include)
 set(DISPATCHER_INCLUDES ./src/dispatcher)
 set(HTTP_INCLUDES ./src/http)
 set(SRC_INCLUDES ./src)
+set(SSL_INCLUDES ./src/ssl)
 include_directories(${INCLUDES})
 include_directories(${DISPATCHER_INCLUDES})
 include_directories(${HTTP_INCLUDES})
 include_directories(${SRC_INCLUDES})
+include_directories(${SSL_INCLUDES})
 
 
 set(CONN_LIB "conn")

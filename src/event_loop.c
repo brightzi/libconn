@@ -64,7 +64,7 @@ event_loop_t event_loop_init_with_name(const char *name) {
     loop->disp = &select_dispatcher;
     loop->disp_data = loop->disp->init(loop);
     io_t io = get_io(loop, loop->pipefd[0]);
-    io->type = io_pipe;
+    io->type = IO_TYPE_PIPE;
     io_add(io, handle_event, EVENT_READ);
     io_set_readcb(io, pipe_read_cb);
     loop->disp->add(loop, loop->pipefd[0], EVENT_READ);
@@ -189,7 +189,7 @@ io_t get_io(event_loop_t loop, int fd) {
     memset(io, 0, sizeof(io_st));
     io->fd = fd;
     io->loop = loop;
-    io->type = io_tcp;
+    io->type = IO_TYPE_TCP;
     loop->io_array[fd] = io;
     loop->io_num++;
 
@@ -349,6 +349,35 @@ io_t create_tcp_client(event_loop_t loop, const char *ip, const char *port, conn
     return io;
 }
 
+io_t create_ssl_client(event_loop_t loop, const char *ip, const char *port, connect_cb connect_cb, close_cb close_cb, void *userdata) {
+    if (loop == NULL) {
+        return NULL;
+    }
+
+    int block = 0;
+    int client_fd = create_socket(block);
+    io_t io = get_io(loop, client_fd);
+    if (io == NULL) {
+        return NULL;
+    }
+    io->ip = strdup(ip);
+    io->port = strdup(port);
+    io->connect_cb = connect_cb;
+    io->close_cb = close_cb;
+    io->userdata = userdata;
+    io->type = IO_TYPE_SSL;
+
+    int ret = io_connect(io);
+    if (ret != 0) {
+        free_io(io);
+        return NULL;
+    }
+    return io;
+}
+
+io_t create_ssl_server(event_loop_t loop, const char *ip, const char *port, accept_cb accept_cb) {
+    return NULL;
+}
 
 void loop_post_event(event_loop_t loop, event_t event) {
     if (loop == NULL) {

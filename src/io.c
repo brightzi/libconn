@@ -79,9 +79,15 @@ static void __connect_cb(io_t io) {
     printf("connected peer address = %s:%d\n", inet_ntop(AF_INET, &servAddr.sin_addr, ipAddr, sizeof(ipAddr)), ntohs(servAddr.sin_port));
 
     io_del(io, EVENT_WRITE);
-    if (io->connect_cb) {
-        io->connect_cb(io);
-        io_read_enable(io);
+    if (io->type == IO_TYPE_SSL) {
+        if (io->ssl_ctx == NULL) {
+
+        }
+    } else {
+        if (io->connect_cb) {
+            io->connect_cb(io);
+            io_read_enable(io);
+        }
     }
 }
 
@@ -132,9 +138,9 @@ void handle_event(io_t io) {
     }
 
     if ((io->events & EVENT_READ) && (io->revents & EVENT_READ)) {
-        if (io->type == io_pipe) {
+        if (io->type == IO_TYPE_PIPE) {
             io->read_cb(io, NULL, 0);
-        } else if (io->type == io_tcp) {
+        } else if (io->type == IO_TYPE_TCP) {
             __read_cb(io);
         }
     }

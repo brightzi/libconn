@@ -16,6 +16,7 @@ set(SOURCES
     ./http/http_parser.c
     ./http/WebSocketClient.cpp
     ./http/WebSocketParser.cpp
+    ./ssl/open_ssl.c
 )
 
 # 创建静态库

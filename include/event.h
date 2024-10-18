@@ -1,13 +1,15 @@
 #ifndef EVENT_H
 #define EVENT_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 #include <stdint.h>
 #include <pthread.h>
 #include "dispatcher.h"
 #include "heap.h"
+#include "cssl.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef struct event_st event_st, *event_t;
 typedef struct event_loop_st event_loop_st, *event_loop_t;
@@ -64,11 +66,12 @@ struct buffer_st {
     size_t tail;
 };
 
-typedef enum io_type {
-    io_tcp,
-    io_udp,
-    io_pipe
-}io_type;
+typedef enum IO_TYPE {
+    IO_TYPE_TCP,
+    IO_TYPE_UDP,
+    IO_TYPE_PIPE,
+    IO_TYPE_SSL,
+}IO_TYPE;
 
 struct io_st {
     EVENT_FILEDS
@@ -81,7 +84,7 @@ struct io_st {
     uint64_t last_write_time;
     buffer_t read_buf;
     buffer_t write_buf;
-    io_type type;
+    IO_TYPE type;
 
     int connect_timeout; 
     int close_timeout;
@@ -113,6 +116,9 @@ struct io_st {
     int close;
     int closed;
     void *ctx;
+    cssl_ctx_t ssl_ctx;
+    cssl_t ssl;
+    
 };
 
 struct event_loop_st {
