@@ -2,6 +2,8 @@
 #define EVENT_LOOP_H
 
 #include "event.h"
+#include <stddef.h>
+#include <errno.h>
 
 // CONN_EXPORT
 // #if defined(HV_STATICLIB) || defined(HV_SOURCE)
@@ -17,15 +19,10 @@
 // #else
 //     #define CONN_EXPORT
 // #endif
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-typedef void (*event_cb) (event_t *ev);
-
-typedef void (*io_cb) (io_t io);
-typedef void (*read_cb) (io_t io, void *buf, int readybytes);
-typedef void (*write_cb) (io_t io, const char *buf, int writebytes);
-typedef void (*close_cb) (io_t io);
-typedef void (*connect_cb) (io_t io);
-typedef void (*accept_cb) (io_t io);
 
 // event_loop interface
 event_loop_t event_loop_init();
@@ -40,9 +37,16 @@ int event_loop_stop(event_loop_t loop);
 
 int event_loop_wakeup(event_loop_t);
 
-int io_add(io_t io, io_cb cb);
-int io_remove(io_t io);
 
+// high-level api
+io_t create_io(event_loop_t loop, int fd, int events, read_cb read_cb, write_cb write_cb);
+void free_io(io_t io);
+io_t get_io(event_loop_t loop, int fd);
+int  io_read_enable(io_t io);
+int  io_send_data(io_t io, const void *buf, size_t len);
+void io_close(io_t io);
+
+// low-level api
 void io_set_readcb(io_t io, read_cb cb);
 void io_set_writecb(io_t io, write_cb cb);
 void io_set_closecb(io_t io, close_cb cb);
@@ -54,11 +58,21 @@ void io_set_write_timeout(io_t io, int timeout);
 void io_set_close_timeout(io_t io, int timeout);
 void io_set_connect_timeout(io_t io, int timeout);
 
+event_timer_t add_timer(event_loop_t loop, int timeout, timer_cb cb, int repeat);
+void del_timer(event_loop_t loop, event_timer_t timer);
 
-io_t create_tcp_client(event_loop_t loop, const char *ip, const char *port, connect_cb connect_cb, close_cb close_cb);
+io_t create_tcp_client(event_loop_t loop, const char *ip, const char *port, connect_cb connect_cb, close_cb close_cb, void *userdata);
 
 io_t create_tcp_server(event_loop_t loop, const char *ip, const char *port, accept_cb accept_cb);
 
+io_t create_ssl_client(event_loop_t loop, const char *ip, const char *port, connect_cb connect_cb, close_cb close_cb, void *userdata);
 
+io_t create_ssl_server(event_loop_t loop, const char *ip, const char *port, accept_cb accept_cb);
+
+void loop_post_event(event_loop_t loop, event_t event);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

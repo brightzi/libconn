@@ -1,172 +1,139 @@
-#ifndef HV_HEAP_H_
-#define HV_HEAP_H_
+#ifndef C_HEAP_H_
+#define C_HEAP_H_
 
-#include <assert.h> // for assert
-#include <stddef.h> // for NULL
+#include <stdlib.h>
+#include <stdio.h>
+#include <stddef.h>
 
-struct heap_node {
-    struct heap_node* parent;
-    struct heap_node* left;
-    struct heap_node* right;
-};
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-typedef int (*heap_compare_fn)(const struct heap_node* lhs, const struct heap_node* rhs);
-struct heap {
-    struct heap_node* root;
-    int nelts;
-    // if compare is less_than, root is min of heap
-    // if compare is larger_than, root is max of heap
-    heap_compare_fn compare;
-};
+typedef struct heap_node_st {
+    int value;
+} heap_node_st;
 
-static inline void heap_init(struct heap* heap, heap_compare_fn fn) {
-    heap->root = NULL;
-    heap->nelts = 0;
-    heap->compare = fn;
+typedef heap_node_st * heap_node_t;
+typedef int (*heap_compare_func)(const heap_node_t lhs,  const heap_node_t rhs);
+
+typedef struct heap_st {
+    heap_node_st **array;
+    int size;
+    int capacity;
+    heap_compare_func compare;
+} heap_st;
+typedef struct heap_st * heap_t;
+
+static inline heap_t create_heap(int capacity, heap_compare_func compare) {
+    heap_t heap = (heap_t)malloc(sizeof(heap_st));
+    heap->array = (heap_node_t *)malloc(capacity * sizeof(heap_node_t));
+    heap->size = 0;
+    heap->capacity = capacity;
+    heap->compare = compare;
+    return heap;
 }
 
-// replace s with r
-static inline void heap_replace(struct heap* heap, struct heap_node* s, struct heap_node* r) {
-    // s->parent->child, s->left->parent, s->right->parent
-    if (s->parent == NULL) heap->root = r;
-    else if (s->parent->left == s) s->parent->left = r;
-    else if (s->parent->right == s) s->parent->right = r;
-
-    if (s->left) s->left->parent = r;
-    if (s->right) s->right->parent = r;
-    if (r) {
-        //*r = *s;
-        r->parent = s->parent;
-        r->left = s->left;
-        r->right = s->right;
+// 上浮操作
+static inline void heapify_up(heap_t heap, int index) {
+    while (index && (heap->compare)(heap->array[index], heap->array[(index - 1) / 2])) {
+        heap_node_t temp = heap->array[index];
+        heap->array[index] = heap->array[(index - 1) / 2];
+        heap->array[(index - 1) / 2] = temp;
+        index = (index - 1) / 2;
     }
 }
 
-static inline void heap_swap(struct heap* heap, struct heap_node* parent, struct heap_node* child) {
-    assert(child->parent == parent && (parent->left == child || parent->right == child));
-    struct heap_node* pparent = parent->parent;
-    struct heap_node* lchild = child->left;
-    struct heap_node* rchild = child->right;
-    struct heap_node* sibling = NULL;
+// 插入元素
+static inline void heap_insert(heap_t heap, heap_node_t node) {
+    if (heap->size == heap->capacity) {
+        printf("Heap is full\n");
+        return;
+    }
+    // printf("heap_insert: %p\n", node);
+    heap->array[heap->size] = node;
+    heap->size++;
+    heapify_up(heap, heap->size - 1);
+}
 
-    if (pparent == NULL) heap->root = child;
-    else if (pparent->left == parent) pparent->left = child;
-    else if (pparent->right == parent) pparent->right = child;
+// 下沉操作
+static inline void heapify_down(heap_t heap, int index) {
+    int parent_index = index;
+    int left = 2 * index + 1;
+    int right = 2 * index + 2;
 
-    if (lchild) lchild->parent = parent;
-    if (rchild) rchild->parent = parent;
+    if (left < heap->size && (heap->compare)(heap->array[left], heap->array[parent_index])) {
+        parent_index = left;
+    }
+    if (right < heap->size && (heap->compare)(heap->array[right], heap->array[parent_index])) {
+        parent_index = right;
+    }
+    if (parent_index != index) {
+        heap_node_t temp = heap->array[index];
+        heap->array[index] = heap->array[parent_index];
+        heap->array[parent_index] = temp;
+        heapify_down(heap, parent_index);
+    }
+}
 
-    child->parent  = pparent;
-    if (parent->left == child) {
-        sibling = parent->right;
-        child->left = parent;
-        child->right = sibling;
+static inline heap_node_t heap_top(heap_t heap) {
+    if (heap->size == 0) {
+        printf("Heap is empty\n");
+        return NULL; // 表示堆为空
+    }
+
+    return heap->array[0];
+}
+
+// 删除最小元素
+static inline void heap_pop(heap_t heap) {
+    if (heap->size == 0) {
+        printf("Heap is empty\n");
+        return ; // 表示堆为空
+    }
+    printf("heap pop\n");
+    heap->array[0] = heap->array[heap->size - 1];
+    heap->array[heap->size - 1] = NULL;
+    heap->size--;
+    heapify_down(heap, 0);
+    return ;
+}
+
+// 删除任意节点
+static inline void heap_remove(heap_t heap, heap_node_t node) {
+    int index = -1;
+    for (int i = 0; i < heap->size; i++) {
+        if (heap->array[i] == node) {
+            index = i;
+            break;
+        }
+    }
+    if (index == -1) {
+        printf("Node not found\n");
+        return ;
+    }
+
+    printf("heap remove\n");
+    if (index == heap->size -1) {
+        heap->array[heap->size - 1] = NULL;
+        heap->size--;
     } else {
-        sibling = parent->left;
-        child->left = sibling;
-        child->right = parent;
-    }
-    if (sibling) sibling->parent = child;
-
-    parent->parent = child;
-    parent->left   = lchild;
-    parent->right  = rchild;
-}
-
-static inline void heap_insert(struct heap* heap, struct heap_node* node) {
-    // get last => insert node => sift up
-    // 0: left, 1: right
-    int path = 0;
-    int n,d;
-    ++heap->nelts;
-    // traverse from bottom to up, get path of last node
-    for (d = 0, n = heap->nelts; n >= 2; ++d, n>>=1) {
-        path = (path << 1) | (n & 1);
-    }
-
-    // get last->parent by path
-    struct heap_node* parent = heap->root;
-    while(d > 1) {
-        parent = (path & 1) ? parent->right : parent->left;
-        --d;
-        path >>= 1;
-    }
-
-    // insert node
-    node->parent = parent;
-    if (parent == NULL) heap->root = node;
-    else if (path & 1) parent->right = node;
-    else parent->left = node;
-
-    // sift up
-    if (heap->compare) {
-        while (node->parent && heap->compare(node, node->parent)) {
-            heap_swap(heap, node->parent, node);
-        }
+        heap->array[index] = heap->array[heap->size - 1];
+        heap->array[heap->size - 1] = NULL;
+        heap->size--;
+        heapify_down(heap, index);
+        heapify_up(heap, index);
     }
 }
 
-static inline void heap_remove(struct heap* heap, struct heap_node* node) {
-    if (heap->nelts == 0)   return;
-    // get last => replace node with last => sift down and sift up
-    // 0: left, 1: right
-    int path = 0;
-    int n,d;
-    // traverse from bottom to up, get path of last node
-    for (d = 0, n = heap->nelts; n >= 2; ++d, n>>=1) {
-        path = (path << 1) | (n & 1);
-    }
-    --heap->nelts;
 
-    // get last->parent by path
-    struct heap_node* parent = heap->root;
-    while(d > 1) {
-        parent = (path & 1) ? parent->right : parent->left;
-        --d;
-        path >>= 1;
-    }
-
-    // replace node with last
-    struct heap_node* last = NULL;
-    if (parent == NULL) {
-        return;
-    }
-    else if (path & 1) {
-        last = parent->right;
-        parent->right = NULL;
-    }
-    else {
-        last = parent->left;
-        parent->left = NULL;
-    }
-    if (last == NULL) {
-        if (heap->root == node) {
-            heap->root = NULL;
-        }
-        return;
-    }
-    heap_replace(heap, node, last);
-    node->parent = node->left = node->right = NULL;
-
-    if (!heap->compare) return;
-    struct heap_node* v = last;
-    struct heap_node* est = NULL;
-    // sift down
-    while (1) {
-        est = v;
-        if (v->left) est = heap->compare(est, v->left) ? est : v->left;
-        if (v->right) est = heap->compare(est, v->right) ? est : v->right;
-        if (est == v) break;
-        heap_swap(heap, v, est);
-    }
-    // sift up
-    while (v->parent && heap->compare(v, v->parent)) {
-        heap_swap(heap, v->parent, v);
-    }
+// 释放堆的内存
+static inline void free_heap(heap_t heap) {
+    free(heap->array);
+    free(heap);
 }
 
-static inline void heap_dequeue(struct heap* heap) {
-    heap_remove(heap, heap->root);
+#ifdef __cplusplus
 }
+#endif
 
-#endif // HV_HEAP_H_
+#endif

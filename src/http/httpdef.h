@@ -1,0 +1,21 @@
+#ifndef HTTP_DEF_H
+#define HTTP_DEF_H
+
+enum http_parser_state {
+    HP_START_REQ_OR_RES,
+    HP_MESSAGE_BEGIN,
+    HP_URL,
+    HP_STATUS,
+    HP_HEADER_FIELD,
+    HP_HEADER_VALUE,
+    HP_HEADERS_COMPLETE,
+    HP_CHUNK_HEADER,
+    HP_BODY,
+    HP_CHUNK_COMPLETE,
+    HP_MESSAGE_COMPLETE,
+    HP_ERROR
+};
+
+
+
+#endif
