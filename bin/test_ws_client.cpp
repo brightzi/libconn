@@ -27,16 +27,18 @@ int main(int argc, char *argv[]) {
     std::map<std::string, std::string> headers;
     // ws->open("http://127.0.0.1:8888", headers);
 
-    // port is ok
-    ws->open("ws://124.222.224.186:8800", headers);
+    // from network
+    // ws->open("ws://124.222.224.186:8800", headers);
 
-    // port is error
-    // ws->open("ws://124.222.224.186:8801", headers);
+    ws->open("ws://127.0.0.1:9988", headers);
+
+    // use tls
+    // ws->open("wss://127.0.0.1:9989", headers);
 
     ws->onopen = onopen;
     ws->onmessage = onMessage;
     ws->onclose = onClose;
-    ws->closeAfterTime(3000);
+    // ws->closeAfterTime(100000);
 
     const char *str = "hello,nihao";
     while(1) {
@@ -49,7 +51,7 @@ int main(int argc, char *argv[]) {
             continue;
         } 
         ws->send(str, strlen(str), WS_OPCODE_TEXT);
-        usleep(500*1000);
+        sleep(1);
     }
 
     return 0;

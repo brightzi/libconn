@@ -2,9 +2,9 @@
 #include <string>
 
 namespace conn {
-std::string  HttpResponse::dump() {
+std::string  HttpResponse::dump(std::string prefix) {
     std::string result;
-    result += "HTTP/1.1 200 OK\r\n";
+    result += prefix;
     for(const auto &it: headers) {
         result += it.first + ": " + it.second + "\r\n";
     }

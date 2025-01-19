@@ -7,7 +7,8 @@
 namespace conn {
 
 HttpServer::HttpServer() {
-
+    m_router = nullptr;
+    m_wsService = nullptr;
 }
 
 HttpServer::~HttpServer() {
@@ -23,7 +24,7 @@ void on_recv(io_t io, void *buf, int readbytes) {
 }
 
 void on_close(io_t io) {
-    // printf("on close\n");
+    printf("on close\n");
     HttpHandle *handle = (HttpHandle *)io->userdata;
     delete handle;
 }
@@ -32,7 +33,7 @@ void on_accept(io_t io) {
     HttpServer *server = (HttpServer *)io->userdata;
 
     HttpHandle *handle = new HttpHandle(io);
-    handle->init(server->getRouter());
+    handle->setRouter(server->getRouter(), server->getWSService());
     io->userdata = handle;
     io_set_readcb(io, on_recv);
     io_set_closecb(io, on_close);
@@ -44,6 +45,10 @@ void HttpServer::registerHttpRouter(HttpRouter *router) {
 
 HttpRouter* HttpServer::getRouter() {
     return m_router;
+}
+
+WebSocketService *HttpServer::getWSService() {
+    return m_wsService;
 }
 
 void HttpServer::run(const char *ip, const char *http_port, const char *https_port) {

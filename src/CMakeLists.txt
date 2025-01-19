@@ -20,7 +20,11 @@ set(SOURCES
     ./http/HttpRouter.cpp
     ./http/HttpHandle.cpp
     ./http/HttpMessage.cpp
+    ./http/WebSocketChannel.h
+    ./http/WebSocketChannel.cpp
+    ./http/WebSocketServer.h
     ./ssl/open_ssl.c
+    ./http/ws_util.c
 )
 
 # 创建静态库

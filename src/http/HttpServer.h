@@ -5,6 +5,7 @@
 #include <memory>
 
 namespace conn { 
+class WebSocketService;
 class HttpServer {
 public:
     HttpServer();
@@ -15,9 +16,15 @@ public:
     void run(const char *ip, const char * http_port, const char *https_port);
 
     HttpRouter* getRouter();
+    WebSocketService *getWSService();
+
+    void setWebSocketService(WebSocketService *ws_service) {
+        m_wsService = ws_service;
+    }
 
 private:
     HttpRouter *m_router; 
+    WebSocketService * m_wsService;
 
 };
 

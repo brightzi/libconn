@@ -125,7 +125,7 @@ public:
         return headers[key];
     }
 
-    std::string dump();
+    std::string dump(std::string prefix);
 
     http_headers headers;
     std::string body;

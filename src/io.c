@@ -52,7 +52,7 @@ int create_socket(int non_block) {
 
 void close_socket(io_t io) {
     close(io->fd);
-    io->fd = 0;
+    io->fd = -1;
 }
 
 static void __connect_timeout_cb(event_timer_t timer) {
@@ -243,9 +243,11 @@ int io_write(io_t io, const void *buf, size_t len) {
         nwrite = ssl_write(io->ssl, buf, len);
         if (nwrite < 0) {
             
-
         }
     } else {
+        if (io->fd == -1) {
+            return -1;
+        }
         nwrite = write(io->fd, buf, len);
         if (nwrite < 0 && errno != EAGAIN) {
             io_close(io);

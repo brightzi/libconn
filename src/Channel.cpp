@@ -15,6 +15,9 @@ Channel::Channel(io_t io) {
 
 Channel::~Channel() {
     printf("channel delete\n");
+    if (m_readBuffer) {
+        delete m_readBuffer;
+    }
 }
 
 static void on_read(io_t io, void* data, int readbytes) {
@@ -61,8 +64,8 @@ void Channel::startConnect() {
     io_connect(m_io);
 }
 
-void Channel::sendData(const char *buf, int len) {
-    io_write(m_io, buf, len);
+int Channel::sendData(const char *buf, int len) {
+    return io_write(m_io, buf, len);
 }
 
 void Channel::close() {

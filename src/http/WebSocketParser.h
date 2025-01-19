@@ -4,17 +4,13 @@
 #include <string>
 #include <functional>
 #include <memory>
+#include "ws_util.h"
 
 namespace conn {
 
-typedef enum ws_opcode {
-    WS_OPCODE_CONTINUE = 0x0,
-    WS_OPCODE_TEXT     = 0x1,
-    WS_OPCODE_BINARY   = 0x2,
-    WS_OPCODE_CLOSE    = 0x8,
-    WS_OPCODE_PING     = 0x9,
-    WS_OPCODE_PONG     = 0xA
-} ws_opcode;
+#define SEC_WEBSOCKET_KEY "SEC_Websocket_Key"
+#define SEC_WEBSOCKET_ACCEPT "Sec_Websocket_Accept"
+#define SEC_WEBSOCKET_PROTOCOL "Sec_Websocket_Protocl"
 
 typedef struct ws_frame_header_st {
     uint8_t opcode : 4;

@@ -15,12 +15,12 @@ public:
     std::function<void()>        onclose;
 
     Channel(io_t io);
-    ~Channel();
+    virtual ~Channel();
     int init();
     void write();    
 
     void startConnect();
-    void sendData(const char *buf, int len);
+    int sendData(const char *buf, int len);
     void close();
 
     void *m_ctx;
