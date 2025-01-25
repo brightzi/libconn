@@ -84,6 +84,7 @@ int WebSocketParser::feedRecvData(const char *data, size_t len) {
             offset += sizeof(struct ws_frame_header_st);
             memcpy(&msg_len, m_buffer.data() + offset, sizeof(uint64_t));
             offset += sizeof(msg_len);
+            ws_ntoh(&msg_len, sizeof(uint64_t));
             payload_len = msg_len;
         }
 

@@ -8,6 +8,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <openssl/ssl.h>
 
 #define DEFAULT_CONNECT_TIMEOUT 5000
 
@@ -61,7 +62,7 @@ static void __connect_timeout_cb(event_timer_t timer) {
     io_close(io);
 }
 
-static void __connect_cb(io_t io) {
+static void io_connect_cb(io_t io) {
     io->last_read_time = get_curtime_ms();
     struct sockaddr_in servAddr;
     memset(&servAddr, 0, sizeof(struct sockaddr_in));
@@ -117,7 +118,7 @@ static int ssl_server_handshake(io_t io) {
     return -1;
 }
 
-static void __accept_cb(io_t io) {
+static void io_accept_cb(io_t io) {
     struct sockaddr_in clientAddr;
     memset(&clientAddr, 0, sizeof(struct sockaddr_in));
     int conn_fd = accept(io->fd, (struct sockaddr *)&clientAddr, (socklen_t *)&clientAddr);
@@ -145,8 +146,11 @@ static void __accept_cb(io_t io) {
     }
 }
 
+bool buffer_is_empty(buffer_t buf) {
+    return buf->head == buf->tail;
+}
 
-void __read_cb(io_t io) {
+void io_read_cb(io_t io) {
     io->last_read_time = io->loop->cur_ms;
     char *buf = io->read_buf->base + io->read_buf->tail;
     int len = io->read_buf->len - io->read_buf->tail;
@@ -168,6 +172,7 @@ void __read_cb(io_t io) {
             return;
         } else {
             io_close(io);
+            return ;
         }
     } else if (nread == 0) {
         io_close(io);
@@ -175,9 +180,9 @@ void __read_cb(io_t io) {
     }
 
     io->read_buf->tail += nread;
-    if (nread < io->read_buf->len) {
-        buf[nread] = '\0';
-    }
+    // if (nread < io->read_buf->len) {
+    //     buf[nread] = '\0';
+    // }
 
     if (io->read_cb) {
         io->read_cb(io, buf, nread);
@@ -187,28 +192,75 @@ void __read_cb(io_t io) {
     return ;
 }
 
-void __write_cb(io_t io) {
-    // io->last_write_time = get_curtime_ms();
-    if (io->write_cb) {
-        io->write_cb(io, NULL, 0);
+void io_write_cb(io_t io) {
+    pthread_mutex_lock(&io->write_mutex);
+    io->last_write_time = get_curtime_ms();
+    int nwrite = 0;
+    if (!buffer_is_empty(io->write_buf)) {
+        if (io->type == IO_TYPE_SSL) {
+            int ssl_err = SSL_get_error(io->ssl, nwrite);
+            nwrite = ssl_write(io->ssl, io->write_buf->base + io->write_buf->head, io->write_buf->tail - io->write_buf->head);
+            if (nwrite < 0) {
+                if (ssl_err != SSL_ERROR_WANT_READ && ssl_err != SSL_ERROR_WANT_WRITE) {
+                    io_close(io);
+                }
+                pthread_mutex_unlock(&io->write_mutex);
+                return ;
+            }
+            if (io->write_cb) {
+                io->write_cb(io, io->write_buf->base + io->write_buf->head, io->write_buf->head + nwrite);
+            }
+            if (nwrite == io->write_buf->tail - io->write_buf->head) {
+                io->write_buf->head = 0;
+                io->write_buf->tail = 0;
+            } else {
+                io->write_buf->head += nwrite;
+            }
+            pthread_mutex_unlock(&io->write_mutex);
+            return ;
+        } else {
+            nwrite = write(io->fd, io->write_buf->base + io->write_buf->head, io->write_buf->tail - io->write_buf->head);
+            if (nwrite < 0) {
+                if (errno == EAGAIN || errno == EINTR) {
+                    pthread_mutex_unlock(&io->write_mutex);
+                    return ;
+                } else {
+                    io_close(io);
+                    pthread_mutex_unlock(&io->write_mutex);
+                    return ;
+                }
+            } else {
+                if (io->write_cb) {
+                    io->write_cb(io, io->write_buf->base + io->write_buf->head, io->write_buf->head + nwrite);
+                }
+                if (nwrite == io->write_buf->tail - io->write_buf->head) {
+                    io->write_buf->head = 0;
+                    io->write_buf->tail = 0;
+                } else {
+                    io->write_buf->head += nwrite;
+                }
+            }
+        }
     }
+    pthread_mutex_unlock(&io->write_mutex);
+    return ;
 }
 
 void handle_event(io_t io) {
     if ((io->events & EVENT_WRITE) && (io->revents & EVENT_WRITE)) {
         if (io->connect) {
             io->connect = 0;
-            __connect_cb(io);
+            io_connect_cb(io);
         } else {
-            __write_cb(io);
+            io_write_cb(io);
         }
     }
 
     if ((io->events & EVENT_READ) && (io->revents & EVENT_READ)) {
         if (io->accept) {
-            __accept_cb(io);
+            io_accept_cb(io);
         } else {
-            __read_cb(io);
+            io_read_cb(io);
         }
     }
 }
@@ -228,7 +280,7 @@ int io_connect(io_t io) {
     if (ret < 0 && errno != EINPROGRESS) {
         return -1;
     } else if (ret == 0) {
-        __connect_cb(io);
+        io_connect_cb(io);
         return 0;
     }
 
@@ -237,27 +289,97 @@ int io_connect(io_t io) {
     return io_add(io, handle_event, EVENT_WRITE);
 }
 
+static int buffer_append_data(io_t io, const void *buf, size_t len) {
+    if (io->write_buf->tail + len > io->write_buf->maxSize) {
+        return -1;
+    }
+    memcpy(io->write_buf->base + io->write_buf->tail, buf, len);
+    io->write_buf->tail += len;
+    return 0;
+}
+
+void __write_cb(io_t io, const void *buf, size_t len) {
+    if (io->write_cb) {
+        io->write_cb(io, buf, len);
+        // printf("write cb, buf=%s, len=%d\n", (char *)(buf+2), len);
+    }
+}
+
 int io_write(io_t io, const void *buf, size_t len) {
     int nwrite = 0;
+    pthread_mutex_lock(&io->write_mutex);
+    if (!buffer_is_empty(io->write_buf)) {
+        if (buffer_append_data(io, buf, len) != 0) {
+            io_close(io);
+            pthread_mutex_unlock(&io->write_mutex);
+            return -1;
+        }
+        pthread_mutex_unlock(&io->write_mutex);
+        return nwrite;
+    }
+    
     if (io->type == IO_TYPE_SSL) {
         nwrite = ssl_write(io->ssl, buf, len);
         if (nwrite < 0) {
-            
+            int ssl_err = SSL_get_error(io->ssl, nwrite);
+            if (ssl_err != SSL_ERROR_WANT_READ && ssl_err != SSL_ERROR_WANT_WRITE) {
+                io_close(io);
+            }
+            pthread_mutex_unlock(&io->write_mutex);
+            return nwrite;
+        } else if (nwrite < len) {
+            __write_cb(io, buf + nwrite, len - nwrite);
+            if (buffer_append_data(io, buf + nwrite, len - nwrite) != 0) {
+                io_close(io);
+                pthread_mutex_unlock(&io->write_mutex);
+                return nwrite;
+            }
+            io_add(io, io_write_cb, EVENT_WRITE);
+            return nwrite;
+        } else {
+            __write_cb(io, buf, len);
+            pthread_mutex_unlock(&io->write_mutex);
+            return nwrite;
         }
     } else {
         if (io->fd == -1) {
+            pthread_mutex_unlock(&io->write_mutex);
             return -1;
         }
         nwrite = write(io->fd, buf, len);
-        if (nwrite < 0 && errno != EAGAIN) {
-            io_close(io);
-            return nwrite;
+        if (nwrite < 0) {
+            if (errno == EAGAIN || errno == EINTR) {
+                nwrite = 0;
+                if (buffer_append_data(io, buf + nwrite, len - nwrite) != 0) {
+                    io_close(io);
+                    pthread_mutex_unlock(&io->write_mutex);
+                    return nwrite;
+                }
+                io_add(io, io_write_cb, EVENT_WRITE);
+                pthread_mutex_unlock(&io->write_mutex);
+                return nwrite;
+            } else {
+                io_close(io);
+                pthread_mutex_unlock(&io->write_mutex);
+                return -1;
+            }
+        } else if (nwrite < len) {
+            __write_cb(io, buf + nwrite, len - nwrite);
+            if (buffer_append_data(io, buf + nwrite, len - nwrite) != 0) {
+                io_close(io);
+                pthread_mutex_unlock(&io->write_mutex);
+                return nwrite;
+            }
+            io_add(io, io_write_cb, EVENT_WRITE);
+        } else {
+            __write_cb(io, buf, len);
         }
     }
 
     if (nwrite > 0) {
         io->last_write_time = get_curtime_ms();
     }
+    pthread_mutex_unlock(&io->write_mutex);
     return nwrite;
 } 
 

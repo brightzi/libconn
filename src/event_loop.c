@@ -17,9 +17,10 @@ static int timers_compare(const heap_node_t lhs, const heap_node_t rhs) {
     return TIMER_ENTRY(lhs)->next_timeout < TIMER_ENTRY(rhs)->next_timeout;
 }
 
-#define MAX_IO_BUF_SIZE 1024 * 1024 * 4
+#define MAX_IO_BUF_SIZE 1024 * 1024 * 2
 
-extern const struct event_dispatcher select_dispatcher;
+//extern const struct event_dispatcher select_dispatcher;
+extern const struct event_dispatcher epoll_dispatcher;
 
 event_loop_t event_loop_init() {
     return event_loop_init_with_name(NULL);
@@ -65,7 +66,7 @@ event_loop_t event_loop_init_with_name(const char *name) {
     make_noblock_fd(loop->pipefd[0]);
     make_noblock_fd(loop->pipefd[1]);
     
-    loop->disp = &select_dispatcher;
+    loop->disp = &epoll_dispatcher;
     loop->disp_data = loop->disp->init(loop);
     io_t io = get_io(loop, loop->pipefd[0]);
     io->type = IO_TYPE_PIPE;
@@ -98,17 +99,26 @@ int event_loop_destory(event_loop_t loop) {
 void process_timer(event_loop_t loop) { 
     heap_t timers = loop->timers;
     event_timer_t timer = NULL;
-    while(loop->timers_num > 0) {
+    while(timers) {
         timer = TIMER_ENTRY(timers->array[0]);
         if (timer->next_timeout > loop->cur_ms) {
             break;
         }
-
-        timer->repeat--;
+        if (timer->repeat != UINT32_MAX) {
+            timer->repeat--;
+        }
         if (timer->repeat == 0) {
             del_timer(loop, timer);
             timer->destory = 1;
             event_pending(timer);
+        } else {
+            // 如果定时器还需要继续重复执行
+            timer->next_timeout = loop->cur_ms + timer->timeout;
+            heap_pop(loop->timers);
+            heap_insert(loop->timers, &timer->node);
+            if (timer->cb) {
+                timer->cb(timer);
+            }
         } 
     }
     
@@ -213,6 +223,7 @@ io_t get_io(event_loop_t loop, int fd) {
     io->read_buf->len = MAX_IO_BUF_SIZE;
     io->read_buf->head = 0;
     io->read_buf->tail = 0;
+    io->read_buf->maxSize = MAX_IO_BUF_SIZE;
 
     tmp = (char *)malloc(MAX_IO_BUF_SIZE);
     if (tmp == NULL) {
@@ -223,6 +234,8 @@ io_t get_io(event_loop_t loop, int fd) {
     io->write_buf->len = MAX_IO_BUF_SIZE;
     io->write_buf->head = 0;
     io->write_buf->tail = 0;
+    io->write_buf->maxSize = MAX_IO_BUF_SIZE;
+    pthread_mutex_init(&io->write_mutex, NULL);
     return io;
 }
 
@@ -255,6 +268,19 @@ void free_io(io_t io) {
             ssl_free(io->ssl);
             io->ssl = NULL;
         }
+        if (io->read_buf) {
+            free(io->read_buf->base);
+            io->read_buf->base = NULL;
+            free(io->read_buf);
+            io->read_buf = NULL;
+        }
+        if (io->write_buf) {
+            free(io->write_buf->base);
+            io->write_buf->base = NULL;
+            free(io->write_buf);
+            io->write_buf = NULL;
+        }
+        pthread_mutex_destroy(&io->write_mutex);
         free(io);
         io = NULL;
     }
@@ -311,7 +337,7 @@ void io_set_acceptcb(io_t io, accept_cb cb) {
     io->accept_cb = cb;
 }
 
-event_timer_t add_timer(event_loop_t loop, int timeout, timer_cb cb, int repeat) {
+event_timer_t add_timer(event_loop_t loop, int timeout, timer_cb cb, uint32_t repeat) {
     if (timeout == 0) {
         return NULL;
     }
@@ -331,8 +357,10 @@ event_timer_t add_timer(event_loop_t loop, int timeout, timer_cb cb, int repeat)
     timer->next_timeout = loop->cur_ms + timeout;
     printf("timer next timeout: %ld\n", timer->next_timeout);
     timer->cb = cb;
-    if (timer->repeat == 0) {
+    if (repeat == 0) {
         timer->repeat = 1;
+    } else {
+        timer->repeat = repeat;
     }
     timer->loop = loop;
     heap_insert(loop->timers, &timer->node);

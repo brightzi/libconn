@@ -5,6 +5,7 @@
 #include "WebSocketParser.h"
 #include "EventLoopThread.h"
 #include "Channel.h"
+#include "event_loop.h"
 
 namespace conn {
 
@@ -35,6 +36,11 @@ public:
     bool isConnected();
 
     void closeAfterTime(int time_ms);
+    
+    void setPingInterval(int interval_ms) {
+        m_pingInterVal = interval_ms; 
+    }
+
 
 private:
     int sendHttpRequest();
@@ -47,6 +53,8 @@ private:
     ChannelPtr m_channel;
     EventLoopThread *m_loop_thread;
     ws_state m_wsState;
+    int m_pingInterVal;
+    event_timer_t m_pingTimer;
 };
 
 }

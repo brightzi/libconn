@@ -66,6 +66,7 @@ struct buffer_st {
     size_t len;
     size_t head;
     size_t tail;
+    size_t maxSize;
 };
 
 typedef enum IO_TYPE {
@@ -86,6 +87,7 @@ struct io_st {
     uint64_t last_write_time;
     buffer_t read_buf;
     buffer_t write_buf;
+    pthread_mutex_t write_mutex;
     IO_TYPE type;
 
     int connect_timeout; 

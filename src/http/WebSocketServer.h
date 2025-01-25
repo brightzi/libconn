@@ -7,8 +7,8 @@ namespace conn {
 
 struct WebSocketService {
     std::function<void(WebSocketChannel *, const HttpRequest *)>     onopen;
-    std::function<void(const WebSocketChannel *, const char *msg, size_t len, ws_opcode op_code)>   onmessage;
-    std::function<void(const WebSocketChannel *)>     onclose;
+    std::function<void(WebSocketChannel *, const char *msg, size_t len, ws_opcode op_code)>   onmessage;
+    std::function<void(WebSocketChannel *)>     onclose;
     int ping_interval;
 
     WebSocketService() : ping_interval(0) {}

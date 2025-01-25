@@ -10,6 +10,7 @@ set(SOURCES
     Channel.cpp
     Buffer.cpp
     ./dispatcher/select.c
+    ./dispatcher/epoll.c
     ./http/HttpClient.cpp
     # ./http/HttpMessage.cpp
     ./http/HttpParser.cpp

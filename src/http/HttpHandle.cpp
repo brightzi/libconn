@@ -123,7 +123,6 @@ bool HttpHandle::switchWSProtocol() {
         switch(opcode) {
             case WS_OPCODE_TEXT:
             case WS_OPCODE_BINARY:
-                printf("recv text message: %s\n", msg.c_str());
                 if (m_wsService) {
                     m_wsService->onmessage(m_wsChannel, msg.c_str(), msg.size(), opcode);
                 }
@@ -133,6 +132,7 @@ bool HttpHandle::switchWSProtocol() {
                 m_wsChannel->close();
                 break;
             case WS_OPCODE_PING:
+                m_wsChannel->send("",0, WS_OPCODE_PONG);
                 break;
             case WS_OPCODE_PONG:
                 break;

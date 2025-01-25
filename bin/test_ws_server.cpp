@@ -20,7 +20,8 @@ public:
     }
 
     void onMessage(const char *msg, int len, ws_opcode op_code) {
-        printf("on message: %s\n", msg);
+        // printf("on message: %s\n", msg);
+        printf("on message len: %d\n", len);
     }
 
 };
@@ -40,11 +41,13 @@ int main(int argc, char *argv[]) {
         channel->setWSContext(test_server);
     };
 
-    ws_service.onmessage = [](const conn::WebSocketChannel * channel, const char *msg, size_t len, ws_opcode op_code) {
+    ws_service.onmessage = [](conn::WebSocketChannel * channel, const char *msg, size_t len, ws_opcode op_code) {
         TestServer *test_server = (TestServer *)channel->getWSContext();
         if (test_server) {
             test_server->onMessage(msg, len, op_code);
         }
+        
+        channel->send(msg, len, op_code);
     };
 
     ws_service.onclose = [](const conn::WebSocketChannel * channel) {

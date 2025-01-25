@@ -5,20 +5,6 @@
 #include <stddef.h>
 #include <errno.h>
 
-// CONN_EXPORT
-// #if defined(HV_STATICLIB) || defined(HV_SOURCE)
-//     #define CONN_EXPORT
-// #elif defined(_MSC_VER)
-//     #if defined(HV_DYNAMICLIB) || defined(CONN_EXPORTS) || defined(CONN_EXPORTS)
-//         #define CONN_EXPORT  __declspec(dllexport)
-//     #else
-//         #define CONN_EXPORT  __declspec(dllimport)
-//     #endif
-// #elif defined(__GNUC__)
-//     #define CONN_EXPORT  __attribute__((visibility("default")))
-// #else
-//     #define CONN_EXPORT
-// #endif
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -58,7 +44,7 @@ void io_set_write_timeout(io_t io, int timeout);
 void io_set_close_timeout(io_t io, int timeout);
 void io_set_connect_timeout(io_t io, int timeout);
 
-event_timer_t add_timer(event_loop_t loop, int timeout, timer_cb cb, int repeat);
+event_timer_t add_timer(event_loop_t loop, int timeout, timer_cb cb, uint32_t repeat);
 void del_timer(event_loop_t loop, event_timer_t timer);
 
 io_t create_tcp_client(event_loop_t loop, const char *ip, const char *port, connect_cb connect_cb, close_cb close_cb, void *userdata);

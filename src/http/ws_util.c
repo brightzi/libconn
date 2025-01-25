@@ -1,5 +1,6 @@
 #include "ws_util.h"
 #include <stdbool.h>
+#include <stdint.h>
 
 void ws_encode_key(const char *sec_websocket_key, char ws_accept[32]) {
     const char *guid = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
@@ -74,14 +75,19 @@ int build_ws_frame(char *out, const char *data, int data_len, char mask[4], bool
         // 数据长度大于 65535
         frame[frame_len] = (has_mask ? 0x80 : 0x00) | 0x7F;
         frame_len++;
-        frame[frame_len] = (data_len >> 56) & 0xFF;
-        frame[frame_len + 1] = (data_len >> 48) & 0xFF;
-        frame[frame_len + 2] = (data_len >> 40) & 0xFF;
-        frame[frame_len + 3] = (data_len >> 32) & 0xFF;
-        frame[frame_len + 4] = (data_len >> 24) & 0xFF;
-        frame[frame_len + 5] = (data_len >> 16) & 0xFF;
-        frame[frame_len + 6] = (data_len >> 8) & 0xFF;
-        frame[frame_len + 7] = data_len & 0xFF;
+        
+        // 确保 data_len 是 uint64_t 类型
+        uint64_t len64 = (uint64_t)data_len;
+        
+        // 按照网络字节序（大端序）填充 8 字节长度
+        frame[frame_len] = 0;
+        frame[frame_len + 1] = (len64 >> 56) & 0xFF;
+        frame[frame_len + 2] = (len64 >> 48) & 0xFF;
+        frame[frame_len + 3] = (len64 >> 40) & 0xFF;
+        frame[frame_len + 4] = (len64 >> 24) & 0xFF;
+        frame[frame_len + 5] = (len64 >> 16) & 0xFF;
+        frame[frame_len + 6] = (len64 >> 8) & 0xFF;
+        frame[frame_len + 7] = len64 & 0xFF;
         frame_len += 8;
     }
 

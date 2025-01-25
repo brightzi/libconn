@@ -97,11 +97,7 @@ void ssl_get_peer_cert_chain(cssl_t ssl) {
     }
 }
 
-int ssl_accept(cssl_t ssl) {
-    int ret = SSL_accept((SSL*)ssl);
-    if (ret == 1) {
-        return 0;
-    }
+int ssl_get_error(cssl_t ssl, int ret) {
     int err = SSL_get_error((SSL *)ssl, ret);
     if (err == SSL_ERROR_WANT_READ) {
         return CSSL_WANT_READ;
@@ -109,6 +105,11 @@ int ssl_accept(cssl_t ssl) {
         return CSSL_WANT_WRITE;
     }
     return CSSL_ERROR;
+}
+
+int ssl_accept(cssl_t ssl) {
+    int ret = SSL_accept((SSL*)ssl);
+    return (ret == 1) ? 0 : ssl_get_error(ssl, ret);
 }
 
 void configure_context(cssl_ctx_t *ctx) {

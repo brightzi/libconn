@@ -42,6 +42,8 @@ void ssl_get_peer_cert_chain(cssl_t ssl);
 
 int ssl_accept(cssl_t ssl);
 
+int ssl_get_error(cssl_t ssl, int ret);
+
 void configure_context(cssl_ctx_t *ctx);
 
 #ifdef __cplusplus

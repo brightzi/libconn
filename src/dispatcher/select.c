@@ -49,6 +49,12 @@ int select_add(event_loop_t loop, int fd, int event) {
     if (!disp) {
         return -1;
     }
+
+    // 检查是否超过select的文件描述符上限
+    if (fd >= FD_SETSIZE) {
+        return -1;
+    }
+
     if (event & EVENT_READ) {
         if (!FD_ISSET(fd, &disp->read_fds)) {
             FD_SET(fd, &disp->read_fds);
@@ -152,4 +158,3 @@ void select_destory(event_loop_t loop) {
     }
     return ;
 }
-

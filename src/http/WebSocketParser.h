@@ -8,9 +8,9 @@
 
 namespace conn {
 
-#define SEC_WEBSOCKET_KEY "SEC_Websocket_Key"
-#define SEC_WEBSOCKET_ACCEPT "Sec_Websocket_Accept"
-#define SEC_WEBSOCKET_PROTOCOL "Sec_Websocket_Protocl"
+#define SEC_WEBSOCKET_KEY "Sec-WebSocket-Key"
+#define SEC_WEBSOCKET_ACCEPT "Sec-WebSocket-Accept"
+#define SEC_WEBSOCKET_PROTOCOL "Sec-WebSocket-Protocl"
 
 typedef struct ws_frame_header_st {
     uint8_t opcode : 4;
