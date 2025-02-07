@@ -13,11 +13,13 @@ void on_accept(io_t io) {
 
 int main(int argc, char *argv[]) {
     if (argc != 3) {
-        printf("usage: %s ip port", argv[0]);
+        printf("usage: %s ip port cert_file key_file\n", argv[0]);
         return -1;
     }
     event_loop_t loop = event_loop_init();
-    io_t io = create_ssl_server(loop, argv[1], argv[2], on_accept);
+    const char *cert_file = "/home/ubuntu/github/libconn/ssl/sslca/server.crt";
+    const char *key_file = "/home/ubuntu/github/libconn/ssl/sslca/server.key";
+    io_t io = create_ssl_server(loop, argv[1], argv[2], cert_file, key_file, on_accept);
     event_loop_run(loop);
     return 0;
 }

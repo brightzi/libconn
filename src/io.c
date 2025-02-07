@@ -134,7 +134,7 @@ static void io_accept_cb(io_t io) {
         if (conn_io->ssl_ctx == NULL && conn_io->ssl == NULL) {
             conn_io->type = IO_TYPE_SSL;
             conn_io->ssl_ctx = create_ssl_context(CSSL_SERVER);
-            configure_context(conn_io->ssl_ctx);
+            configure_context(conn_io->ssl_ctx, io->cert_file, io->key_file);
             conn_io->ssl = ssl_new(conn_io->ssl_ctx, conn_io->fd);
             ssl_server_handshake(conn_io);
         }

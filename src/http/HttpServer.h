@@ -13,7 +13,7 @@ public:
 
     void registerHttpRouter(HttpRouter *router);
 
-    void run(const char *ip, const char * http_port, const char *https_port);
+    void run(const char *ip, const char * http_port, const char *https_port, const char *cert_file, const char *key_file);
 
     HttpRouter* getRouter();
     WebSocketService *getWSService();

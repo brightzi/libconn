@@ -57,7 +57,10 @@ int main(int argc, char *argv[]) {
         }
         delete test_server;
     };
-
-    ws_server.run("127.0.0.1", "9988", "9989");
+    
+    // replace with your own cert and key fil
+    const char *cert_file = "/home/ubuntu/github/libconn/ssl/sslca/server.crt";
+    const char *key_file = "/home/ubuntu/github/libconn/ssl/sslca/server.key";
+    ws_server.run("127.0.0.1", "9988", "9989", cert_file, key_file);
     return 0;
 }

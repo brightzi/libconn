@@ -474,7 +474,7 @@ io_t create_tcp_server(event_loop_t loop, const char *ip, const char *port, acce
     return io;
 }
 
-io_t create_ssl_server(event_loop_t loop, const char *ip, const char *port, accept_cb accept_cb) {
+io_t create_ssl_server(event_loop_t loop, const char *ip, const char *port, const char *cert_file, const char *key_file, accept_cb accept_cb) {
     if (loop == NULL) {
         return NULL;
     }
@@ -489,6 +489,10 @@ io_t create_ssl_server(event_loop_t loop, const char *ip, const char *port, acce
     io->port = strdup(port);
     io->accept_cb = accept_cb;
     io->type = IO_TYPE_SSL;
+    if (cert_file && key_file) {    
+        io->cert_file = strdup(cert_file);
+        io->key_file = strdup(key_file);
+    }
 
     if (io_set_reuse_addr(io) < 0) {
         free_io(io);

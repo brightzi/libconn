@@ -25,14 +25,9 @@ void onClose() {
 int main(int argc, char *argv[]) {
     WebSocketClient *ws = new WebSocketClient();
     std::map<std::string, std::string> headers;
-
-    // from network
-    ws->open("ws://124.222.224.186:8800", headers);
-
-    // ws->open("ws://127.0.0.1:9988/", headers);
-
+    // ws->open("ws://127.0.0.1:9988", headers);
     // use tls
-    // ws->open("wss://127.0.0.1:9989", headers);
+    ws->open("wss://127.0.0.1:9989", headers);
 
     ws->onopen = onopen;
     ws->onmessage = onMessage;
@@ -40,14 +35,8 @@ int main(int argc, char *argv[]) {
     // ws->closeAfterTime(100000);
 
     
-    int len = 1024 * 1024 * 1;
-    char *str = (char *)malloc(sizeof(char) * len);
-    if (str) {
-        memset(str, 'a', len - 1);
-        str[len -1] = '\0';
-    }
+    const char *str = "hello, world";
     while(1) {
-        sleep(5);
         if (str == "exit") {
             ws->close();
             break;

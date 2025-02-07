@@ -51,7 +51,7 @@ WebSocketService *HttpServer::getWSService() {
     return m_wsService;
 }
 
-void HttpServer::run(const char *ip, const char *http_port, const char *https_port) {
+void HttpServer::run(const char *ip, const char *http_port, const char *https_port, const char *cert_file, const char *key_file) {
     event_loop_t loop = event_loop_init();
     if (http_port) {
         io_t io = create_tcp_server(loop, ip, http_port, on_accept);
@@ -61,7 +61,7 @@ void HttpServer::run(const char *ip, const char *http_port, const char *https_po
         io->userdata = this;
     }
     if (https_port) {
-        io_t io = create_ssl_server(loop, ip, https_port, on_accept);
+        io_t io = create_ssl_server(loop, ip, https_port, cert_file, key_file, on_accept);
         if (io == NULL) {
             return ;
         }

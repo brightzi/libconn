@@ -7,7 +7,7 @@ using namespace conn;
 
 int main(int argc, char *argv[]) {
     if (argc != 3) {
-        printf("Usage: %s <http_port> <https_port>\n", argv[0]);
+        printf("Usage: %s <http_port> <https_port> \n", argv[0]);
         return 1;
     }
 
@@ -27,5 +27,9 @@ int main(int argc, char *argv[]) {
     std::shared_ptr<HttpServer> server = std::make_shared<HttpServer>();
     server->registerHttpRouter(router);
     
-    server->run("127.0.0.1", argv[1], argv[2]);
+    // replace with your own cert and key file
+    const char *cert_file = "/home/ubuntu/github/libconn/ssl/sslca/server.crt";
+    const char *key_file = "/home/ubuntu/github/libconn/ssl/sslca/server.key";
+    server->run("127.0.0.1", argv[1], argv[2], cert_file, key_file);
+    return 0;
 }

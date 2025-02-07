@@ -123,6 +123,8 @@ struct io_st {
     void *ctx;
     cssl_ctx_t ssl_ctx;
     cssl_t ssl;
+    char *cert_file;
+    char *key_file;
     
 };
 

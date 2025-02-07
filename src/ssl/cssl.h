@@ -44,7 +44,7 @@ int ssl_accept(cssl_t ssl);
 
 int ssl_get_error(cssl_t ssl, int ret);
 
-void configure_context(cssl_ctx_t *ctx);
+void configure_context(cssl_ctx_t *ctx, const char *cert_file, const char *key_file);
 
 #ifdef __cplusplus
 }

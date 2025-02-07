@@ -112,14 +112,14 @@ int ssl_accept(cssl_t ssl) {
     return (ret == 1) ? 0 : ssl_get_error(ssl, ret);
 }
 
-void configure_context(cssl_ctx_t *ctx) {
+void configure_context(cssl_ctx_t *ctx, const char *cert_file, const char *key_file) {
      /* 加载服务器的证书和私钥 */
-    if (SSL_CTX_use_certificate_file(ctx, "/home/ubuntu/github/libconn/ssl/sslca/server.crt", SSL_FILETYPE_PEM) <= 0) {
+    if (SSL_CTX_use_certificate_file(ctx, cert_file, SSL_FILETYPE_PEM) <= 0) {
         ERR_print_errors_fp(stderr);
         exit(EXIT_FAILURE);
     }
 
-    if (SSL_CTX_use_PrivateKey_file(ctx, "/home/ubuntu/github/libconn/ssl/sslca/server.key", SSL_FILETYPE_PEM) <= 0) {
+    if (SSL_CTX_use_PrivateKey_file(ctx, key_file, SSL_FILETYPE_PEM) <= 0) {
         ERR_print_errors_fp(stderr);
         exit(EXIT_FAILURE);
     }
