@@ -281,16 +281,17 @@ void free_io(io_t io) {
             io->write_buf = NULL;
         }
         pthread_mutex_destroy(&io->write_mutex);
-        free(io);
-        io = NULL;
     }
 }
 
 void io_close(io_t io) {
+    pthread_mutex_lock(&io->write_mutex);
     if (io->closed) {
+        pthread_mutex_unlock(&io->write_mutex);
         return;
     }
     io->closed = 1;
+    pthread_mutex_unlock(&io->write_mutex);
     io->loop->disp->del(io->loop, io->fd, EVENT_READ | EVENT_WRITE);
     io_remove_read_timeout(io);
     io_remove_write_timeout(io);
@@ -306,9 +307,6 @@ void io_close(io_t io) {
 }
 
 int io_send_data(io_t io, const void *buf, size_t len) {
-    if (io->closed) {
-        return -1;
-    }
     return io_write(io, buf, len);
 }
 

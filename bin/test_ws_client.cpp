@@ -25,9 +25,9 @@ void onClose() {
 int main(int argc, char *argv[]) {
     WebSocketClient *ws = new WebSocketClient();
     std::map<std::string, std::string> headers;
-    // ws->open("ws://127.0.0.1:9988", headers);
+    ws->open("ws://127.0.0.1:9988", headers);
     // use tls
-    ws->open("wss://127.0.0.1:9989", headers);
+    // ws->open("wss://127.0.0.1:9989", headers);
 
     ws->onopen = onopen;
     ws->onmessage = onMessage;
@@ -45,7 +45,7 @@ int main(int argc, char *argv[]) {
             continue;
         } 
         ws->send(str, strlen(str), WS_OPCODE_TEXT);
-        sleep(1);
+        // sleep(1);
     }
 
     return 0;

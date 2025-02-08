@@ -306,12 +306,17 @@ void __write_cb(io_t io, const void *buf, size_t len) {
 }
 
 int io_write(io_t io, const void *buf, size_t len) {
-    int nwrite = 0;
     pthread_mutex_lock(&io->write_mutex);
+    if (io->closed) {
+        pthread_mutex_unlock(&io->write_mutex);
+        printf("io already close\n");
+        return -1;
+    }
+    int nwrite = 0;
     if (!buffer_is_empty(io->write_buf)) {
         if (buffer_append_data(io, buf, len) != 0) {
-            io_close(io);
             pthread_mutex_unlock(&io->write_mutex);
+            io_close(io);
             return -1;
         }
         pthread_mutex_unlock(&io->write_mutex);
@@ -323,15 +328,15 @@ int io_write(io_t io, const void *buf, size_t len) {
         if (nwrite < 0) {
             int ssl_err = SSL_get_error(io->ssl, nwrite);
             if (ssl_err != SSL_ERROR_WANT_READ && ssl_err != SSL_ERROR_WANT_WRITE) {
+                pthread_mutex_unlock(&io->write_mutex);
                 io_close(io);
             }
-            pthread_mutex_unlock(&io->write_mutex);
             return nwrite;
         } else if (nwrite < len) {
             __write_cb(io, buf + nwrite, len - nwrite);
             if (buffer_append_data(io, buf + nwrite, len - nwrite) != 0) {
-                io_close(io);
                 pthread_mutex_unlock(&io->write_mutex);
+                io_close(io);
                 return nwrite;
             }
             io_add(io, io_write_cb, EVENT_WRITE);
@@ -351,23 +356,23 @@ int io_write(io_t io, const void *buf, size_t len) {
             if (errno == EAGAIN || errno == EINTR) {
                 nwrite = 0;
                 if (buffer_append_data(io, buf + nwrite, len - nwrite) != 0) {
-                    io_close(io);
                     pthread_mutex_unlock(&io->write_mutex);
+                    io_close(io);
                     return nwrite;
                 }
                 io_add(io, io_write_cb, EVENT_WRITE);
                 pthread_mutex_unlock(&io->write_mutex);
                 return nwrite;
             } else {
-                io_close(io);
                 pthread_mutex_unlock(&io->write_mutex);
+                io_close(io);
                 return -1;
             }
         } else if (nwrite < len) {
             __write_cb(io, buf + nwrite, len - nwrite);
             if (buffer_append_data(io, buf + nwrite, len - nwrite) != 0) {
-                io_close(io);
                 pthread_mutex_unlock(&io->write_mutex);
+                io_close(io);
                 return nwrite;
             }
             io_add(io, io_write_cb, EVENT_WRITE);
