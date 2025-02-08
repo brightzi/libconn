@@ -12,10 +12,10 @@ int main(int argc, char *argv[]) {
     }
 
     HttpRouter *router = new HttpRouter();
-    router->get("/hello", [](HttpRequest *req, HttpResponse *res) {
+    router->get("/ping", [](HttpRequest *req, HttpResponse *res) {
         res->headers["Content-Type"] = "text/plain";
         res->headers["Connection"] = "close";
-        res->body.append("Hello, World!");
+        res->body.append("pong");
     });
 
     router->post("/echo", [](HttpRequest *req, HttpResponse *res) {

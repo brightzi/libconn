@@ -24,7 +24,7 @@ void on_recv(io_t io, void *buf, int readbytes) {
 }
 
 void on_close(io_t io) {
-    printf("on close\n");
+    // printf("on close\n");
     HttpHandle *handle = (HttpHandle *)io->userdata;
     delete handle;
 }
