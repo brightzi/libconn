@@ -11,6 +11,7 @@ set(SOURCES
     Buffer.cpp
     ./dispatcher/select.c
     ./dispatcher/epoll.c
+    ./dispatcher/poll.c
     ./http/HttpClient.cpp
     # ./http/HttpMessage.cpp
     ./http/HttpParser.cpp

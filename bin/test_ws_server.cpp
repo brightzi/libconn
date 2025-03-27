@@ -27,6 +27,10 @@ public:
 };
 
 int main(int argc, char *argv[]) {
+    if (argc < 2) {
+        printf("Usage: %s <port>\n", argv[0]);
+        return -1;
+    }
 
     conn::WebSocketServer ws_server;
     conn::WebSocketService ws_service;
@@ -59,8 +63,8 @@ int main(int argc, char *argv[]) {
     };
     
     // replace with your own cert and key fil
-    const char *cert_file = "/home/ubuntu/github/libconn/ssl/sslca/server.crt";
-    const char *key_file = "/home/ubuntu/github/libconn/ssl/sslca/server.key";
-    ws_server.run("127.0.0.1", "9988", "9989", cert_file, key_file);
+    // const char *cert_file = "/home/ubuntu/github/libconn/ssl/sslca/server.crt";
+    // const char *key_file = "/home/ubuntu/github/libconn/ssl/sslca/server.key";
+    ws_server.run("127.0.0.1", argv[1], NULL, NULL, NULL);
     return 0;
 }

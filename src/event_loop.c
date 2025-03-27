@@ -21,6 +21,7 @@ static int timers_compare(const heap_node_t lhs, const heap_node_t rhs) {
 
 //extern const struct event_dispatcher select_dispatcher;
 extern const struct event_dispatcher epoll_dispatcher;
+// extern const struct event_dispatcher poll_dispatcher;
 
 event_loop_t event_loop_init() {
     return event_loop_init_with_name(NULL);

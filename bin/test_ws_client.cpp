@@ -45,7 +45,7 @@ int main(int argc, char *argv[]) {
             continue;
         } 
         ws->send(str, strlen(str), WS_OPCODE_TEXT);
-        // sleep(1);
+        sleep(1);
     }
 
     return 0;
