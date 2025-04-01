@@ -3,6 +3,7 @@
 #include "dispatcher.h"
 #include "io.h"
 #include "heap.h"
+#include "thread_pool.h"
 #include <signal.h>
 
 
@@ -237,6 +238,7 @@ io_t get_io(event_loop_t loop, int fd) {
     io->write_buf->tail = 0;
     io->write_buf->maxSize = MAX_IO_BUF_SIZE;
     pthread_mutex_init(&io->write_mutex, NULL);
+    io->threadPool = NULL;
     return io;
 }
 
@@ -437,7 +439,7 @@ io_t create_ssl_client(event_loop_t loop, const char *ip, const char *port, conn
     return io;
 }
 
-io_t create_tcp_server(event_loop_t loop, const char *ip, const char *port, accept_cb accept_cb) {
+io_t create_tcp_server(event_loop_t loop, const char *ip, const char *port, accept_cb accept_cb, int thread_num) {
     if (loop == NULL) {
         return NULL;
     }
@@ -446,6 +448,12 @@ io_t create_tcp_server(event_loop_t loop, const char *ip, const char *port, acce
     io_t io = get_io(loop, server_fd);
     if (io == NULL) {
         return NULL;
+    }
+    
+    if (thread_num > 0) {
+        thread_pool_t thread_pool = thread_pool_new(loop, thread_num);
+        thread_pool_start(thread_pool);
+        io->threadPool = thread_pool;
     }
 
     io->ip = strdup(ip);
@@ -473,7 +481,7 @@ io_t create_tcp_server(event_loop_t loop, const char *ip, const char *port, acce
     return io;
 }
 
-io_t create_ssl_server(event_loop_t loop, const char *ip, const char *port, const char *cert_file, const char *key_file, accept_cb accept_cb) {
+io_t create_ssl_server(event_loop_t loop, const char *ip, const char *port, const char *cert_file, const char *key_file, accept_cb accept_cb, int thread_num) {
     if (loop == NULL) {
         return NULL;
     }
@@ -482,6 +490,12 @@ io_t create_ssl_server(event_loop_t loop, const char *ip, const char *port, cons
     io_t io = get_io(loop, server_fd);
     if (io == NULL) {
         return NULL;
+    }
+    
+    if (thread_num > 0) {
+        thread_pool_t thread_pool = thread_pool_new(loop, thread_num);
+        thread_pool_start(thread_pool);
+        io->threadPool = thread_pool;
     }
 
     io->ip = strdup(ip);

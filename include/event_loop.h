@@ -49,11 +49,11 @@ void del_timer(event_loop_t loop, event_timer_t timer);
 
 io_t create_tcp_client(event_loop_t loop, const char *ip, const char *port, connect_cb connect_cb, close_cb close_cb, void *userdata);
 
-io_t create_tcp_server(event_loop_t loop, const char *ip, const char *port, accept_cb accept_cb);
+io_t create_tcp_server(event_loop_t loop, const char *ip, const char *port, accept_cb accept_cb, int thread_num);
 
 io_t create_ssl_client(event_loop_t loop, const char *ip, const char *port, connect_cb connect_cb, close_cb close_cb, void *userdata);
 
-io_t create_ssl_server(event_loop_t loop, const char *ip, const char *port, const char *cert_file, const char *key_file, accept_cb accept_cb);
+io_t create_ssl_server(event_loop_t loop, const char *ip, const char *port, const char *cert_file, const char *key_file, accept_cb accept_cb, int thread_num);
 
 void loop_post_event(event_loop_t loop, event_t event);
 

@@ -22,7 +22,8 @@ int main(int argc, char *argv[]) {
         return -1;
     }
     event_loop_t loop = event_loop_init();
-    io_t io = create_tcp_server(loop, argv[1], argv[2], on_accept);
+    int thread_num = 4;
+    io_t io = create_tcp_server(loop, argv[1], argv[2], on_accept, thread_num);
     event_loop_run(loop);
     return 0;
 }

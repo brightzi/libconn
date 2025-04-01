@@ -106,7 +106,7 @@ int HttpClient::async_send(HttpRequest *req, HttpResponseCallback callback) {
     if (m_loop_thread == NULL) {
         m_loop_thread = new EventLoopThread();
         m_loop_thread->init();
-        usleep(10000);
+        // usleep(10000);
     }
 
     http_task_t task = new http_task_st();

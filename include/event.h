@@ -76,6 +76,8 @@ typedef enum IO_TYPE {
     IO_TYPE_SSL,
 }IO_TYPE;
 
+struct thread_pool_st;
+
 struct io_st {
     EVENT_FILEDS
     int fd;
@@ -126,6 +128,7 @@ struct io_st {
     char *cert_file;
     char *key_file;
     
+    struct thread_pool_st *threadPool;
 };
 
 struct event_loop_st {

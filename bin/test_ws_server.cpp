@@ -65,6 +65,7 @@ int main(int argc, char *argv[]) {
     // replace with your own cert and key fil
     // const char *cert_file = "/home/ubuntu/github/libconn/ssl/sslca/server.crt";
     // const char *key_file = "/home/ubuntu/github/libconn/ssl/sslca/server.key";
-    ws_server.run("127.0.0.1", argv[1], NULL, NULL, NULL);
+    int thread_num = 4;
+    ws_server.run("127.0.0.1", argv[1], NULL, NULL, NULL, thread_num);
     return 0;
 }

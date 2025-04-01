@@ -30,6 +30,7 @@ int main(int argc, char *argv[]) {
     // replace with your own cert and key file
     const char *cert_file = "/home/ubuntu/github/libconn/ssl/sslca/server.crt";
     const char *key_file = "/home/ubuntu/github/libconn/ssl/sslca/server.key";
-    server->run("127.0.0.1", argv[1], argv[2], cert_file, key_file);
+    int thread_num = 4;
+    server->run("127.0.0.1", argv[1], argv[2], cert_file, key_file, 4);
     return 0;
 }

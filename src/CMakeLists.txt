@@ -27,6 +27,8 @@ set(SOURCES
     ./http/WebSocketServer.h
     ./ssl/open_ssl.c
     ./http/ws_util.c
+    ./event_loop_thread.c
+    ./thread_pool.c
 )
 
 # 创建静态库

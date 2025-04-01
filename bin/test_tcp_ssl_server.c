@@ -19,7 +19,8 @@ int main(int argc, char *argv[]) {
     event_loop_t loop = event_loop_init();
     const char *cert_file = "/home/ubuntu/github/libconn/ssl/sslca/server.crt";
     const char *key_file = "/home/ubuntu/github/libconn/ssl/sslca/server.key";
-    io_t io = create_ssl_server(loop, argv[1], argv[2], cert_file, key_file, on_accept);
+    int thread_num = 4;
+    io_t io = create_ssl_server(loop, argv[1], argv[2], cert_file, key_file, on_accept, thread_num);
     event_loop_run(loop);
     return 0;
 }

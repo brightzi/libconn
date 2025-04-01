@@ -2,6 +2,7 @@
 #include "event_loop.h"
 #include "cssl.h"
 #include "ctimer.h"
+#include "thread_pool.h"
 #include <fcntl.h>
 #include <errno.h>
 #include <arpa/inet.h>
@@ -126,8 +127,13 @@ static void io_accept_cb(io_t io) {
         return ;
     }
     make_noblock_fd(conn_fd);
-     
-    io_t conn_io = get_io(io->loop, conn_fd);
+    
+    event_loop_t loop = io->loop;
+    if (io->threadPool) {
+        loop = thread_pool_get_next_loop(io->threadPool);
+    }
+    
+    io_t conn_io = get_io(loop, conn_fd);
     conn_io->accept_cb = io->accept_cb;
     conn_io->userdata = io->userdata;
     if (io->type == IO_TYPE_SSL) {
