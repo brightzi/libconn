@@ -7,7 +7,8 @@ void on_close(io_t io) {
 
 void on_read(io_t io, char *buf, int readybytes) {
     printf("on read: %s\n", buf);
-    io_send_data(io, "nihao", 5);
+    const char *str = "hi~~\n";
+    io_send_data(io, str, strlen(str)+1);
 }
 
 void on_accept(io_t io) {

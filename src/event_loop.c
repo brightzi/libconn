@@ -258,10 +258,6 @@ io_t create_io(event_loop_t loop, int fd, int events, read_cb read_cb, write_cb 
 
 
 void free_io(io_t io) {
-    //TODO
-    //remove io read/wrtie from dispatcher
-    // close socket
-    //free io
     if (io) {
         if (io->ssl_ctx) {
             ssl_ctx_free(io->ssl_ctx);
@@ -296,7 +292,8 @@ void io_close(io_t io) {
     }
     io->closed = 1;
     pthread_mutex_unlock(&io->write_mutex);
-    io->loop->disp->del(io->loop, io->fd, EVENT_READ | EVENT_WRITE);
+    io_del(io, EVENT_READ);
+    io_del(io, EVENT_WRITE);
     io_remove_read_timeout(io);
     io_remove_write_timeout(io);
     io_remove_connect_timeout(io);

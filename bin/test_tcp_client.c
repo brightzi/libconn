@@ -5,18 +5,13 @@ static  char *ip = NULL;
 static  char *port = NULL;
 
 void on_read(io_t io, void *buf, int readybytes) {
-    printf("on message\n"); 
-    // read(io->fd, temp, 1024);
     printf("recv: %s\n", buf);
-    sleep(1);  
-    write(io->fd, "hello, world!", strlen("hello, world!"));
-    io_write(io, "hello, world!", strlen("hello, world!"));
 }
 
 
 void on_connect(io_t io) {
     printf("on connect\n");
-    io_send_data(io, "hello, world", strlen("hello, world"));
+    io_send_data(io, "hello, world", strlen("hello, world") + 1);
     io_set_readcb(io, on_read);     
     io_read_enable(io);
     return ;
@@ -24,12 +19,9 @@ void on_connect(io_t io) {
 
 void on_close(io_t io) {
     printf("on close\n");
-    sleep(2);
-    new_connect(io->loop);
 }
 
 void new_connect(event_loop_t loop) {
-    printf("new connect\n");
     io_t io = create_tcp_client(loop, ip, port, on_connect, on_close, NULL);
     if (io == NULL) {
         return -1;

@@ -108,11 +108,9 @@ static inline void heap_remove(heap_t heap, heap_node_t node) {
         }
     }
     if (index == -1) {
-        printf("Node not found\n");
         return ;
     }
 
-    printf("heap remove\n");
     if (index == heap->size -1) {
         heap->array[heap->size - 1] = NULL;
         heap->size--;

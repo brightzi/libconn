@@ -3,6 +3,7 @@
 #include "cssl.h"
 #include "ctimer.h"
 #include "thread_pool.h"
+#include <stdio.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <arpa/inet.h>
@@ -192,13 +193,18 @@ void io_read_cb(io_t io) {
 
     if (io->read_cb) {
         io->read_cb(io, buf, nread);
-        io->read_buf->tail = 0;
-        io->read_buf->head = 0;
+        if (io->read_buf) {
+            io->read_buf->tail = 0;
+            io->read_buf->head = 0;
+        }
     }
     return ;
 }
 
 void io_write_cb(io_t io) {
+    if (io->closed) {
+        return ;
+    }
     pthread_mutex_lock(&io->write_mutex);
     io->last_write_time = get_curtime_ms();
     int nwrite = 0;

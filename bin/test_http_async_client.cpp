@@ -13,19 +13,17 @@ void onHttpResponse(const HttpResponsePtr& resp) {
 int main(int argc, char *argv[]) {
     
     {
-        
         HttpClient client;
         HttpRequest req;
-        HttpResponse res;
         req.url = "http://127.0.0.1:9988/echo";
         req.method = HTTP_POST;
         req.headers["Content-Type"] = "application/json";
         req.timeout = 1000000;
         req.body = "{\"hello:\":\"world\"}";
-        
-        int ret = client.send(&req, &res);
-        printf("sync resp:%s\n", res.body.c_str());
-    }
 
+        client.async_send(&req, onHttpResponse);
+        sleep(5);
+    }
+    
     return 0;
 }

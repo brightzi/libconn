@@ -17,7 +17,7 @@ typedef struct http_task_st {
     }
 
     ~http_task_st() {
-        printf("task delete\n");
+        // printf("task delete\n");
     }
 } http_task_st, *http_task_t;
     

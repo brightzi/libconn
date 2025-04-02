@@ -6,7 +6,7 @@
 using namespace conn;
 
 int main(int argc, char *argv[]) {
-    if (argc != 3) {
+    if (argc != 2) {
         printf("Usage: %s <http_port> <https_port> \n", argv[0]);
         return 1;
     }

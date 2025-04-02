@@ -237,7 +237,6 @@ static void sendHttpRequest(Channel *channel) {
 }
 
 void HttpClient::doTask(http_task_t task) {
-    printf("\n\ndotask:%s\n", task->req->u->path);
     char port[16] = {0};
     snprintf(port, sizeof(port), "%d", task->req->u->port);
     int block = 0;
@@ -262,7 +261,6 @@ void HttpClient::doTask(http_task_t task) {
         const char *data = (const char *)buf->data();
         int size = buf->size();
         http_task_t task = (http_task_t) channel->m_ctx;
-        printf("readdata : %s", data);
         int nparse = task->parser->feedRecvData(data, size);
         if (nparse != size) {
             channel->close();
@@ -270,24 +268,24 @@ void HttpClient::doTask(http_task_t task) {
         }
 
         if (task->parser->isComplete()) {
-            printf("task is already \n");
             HttpResponse *resp = (HttpResponse *)task->parser->resp;
+            HttpResponsePtr respStr(resp);
+            task->cb(respStr);
             if (io->keepalive && resp->getHeader("Connection") == "keep-alive") {
-                printf("keepalive\n");
             } else {
-                printf("no keepalive\n");
+                // printf("no keepalive\n");
                 channel->close();
             }
         }
     };
 
     channel->onwrite = [&io](Buffer *buf) {
-        printf("write finish\n");
+        // printf("write finish\n");
     };
 
     channel->onclose = [this, io]() {
         removeChannel(io->fd);
-        printf("close \n");
+        // printf("close \n");
     };
 
     channel->startConnect();
@@ -302,7 +300,7 @@ void HttpClient::addChannel(io_t io) {
 }
 
 Channel* HttpClient::getChannel(int fd) {
-    printf("channel address: %p\n", m_channels[fd]);
+    // printf("channel address: %p\n", m_channels[fd]);
     return m_channels[fd];
 }
 
