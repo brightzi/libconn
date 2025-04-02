@@ -4,6 +4,7 @@
 #include "io.h"
 #include "heap.h"
 #include "thread_pool.h"
+#include "log.h"
 #include <signal.h>
 
 
@@ -343,10 +344,8 @@ event_timer_t add_timer(event_loop_t loop, int timeout, timer_cb cb, uint32_t re
         return NULL;
     }
 
-    printf("loop: %p\n", loop);
 
     event_timer_t timer = malloc(sizeof(event_timer_st));
-    printf("malloc timer:%p\n", timer);
     if (!timer) {
         return NULL;
     } 
@@ -354,9 +353,7 @@ event_timer_t add_timer(event_loop_t loop, int timeout, timer_cb cb, uint32_t re
 
     update_loop_timer(loop);
     timer->timeout = timeout;
-    printf("timer cur timeout: %ld\n", loop->cur_ms);
     timer->next_timeout = loop->cur_ms + timeout;
-    printf("timer next timeout: %ld\n", timer->next_timeout);
     timer->cb = cb;
     if (repeat == 0) {
         timer->repeat = 1;

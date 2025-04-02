@@ -29,6 +29,7 @@ set(SOURCES
     ./http/ws_util.c
     ./event_loop_thread.c
     ./thread_pool.c
+    ./log.c
 )
 
 # 创建静态库

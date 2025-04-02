@@ -160,7 +160,6 @@ bool HttpHandle::upgradeWSProtocol() {
     if (iter_protocol != m_request->headers.end()) {
         m_response->headers[SEC_WEBSOCKET_PROTOCOL] = iter_protocol->second;
     }
-    printf("switch to websocket\n");
     m_serviceType = SERVICE_WEBSOCKET;
     sendHttpResponse();
     return true;

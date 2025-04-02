@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "WebSocketServer.h"
+#include "log.h"
 
 class TestServer {
 public:
@@ -12,16 +13,16 @@ public:
     }
 
     void onConnect() {
-        printf("ws server open \n");
+        LOG_I("ws server open");
     }
 
     void onClose() {
-        printf("ws client close \n");
+        LOG_I("ws client close");
     }
 
     void onMessage(const char *msg, int len, ws_opcode op_code) {
         // printf("on message: %s\n", msg);
-        printf("on message len: %d\n", len);
+        LOG_I("msg: %s", msg)
     }
 
 };
@@ -65,7 +66,7 @@ int main(int argc, char *argv[]) {
     // replace with your own cert and key fil
     // const char *cert_file = "/home/ubuntu/github/libconn/ssl/sslca/server.crt";
     // const char *key_file = "/home/ubuntu/github/libconn/ssl/sslca/server.key";
-    int thread_num = 4;
+    int thread_num = 1;
     ws_server.run("127.0.0.1", argv[1], NULL, NULL, NULL, thread_num);
     return 0;
 }

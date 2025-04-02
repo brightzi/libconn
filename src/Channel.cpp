@@ -14,7 +14,6 @@ Channel::Channel(io_t io) {
 }
 
 Channel::~Channel() {
-    printf("channel delete\n");
     if (m_readBuffer) {
         delete m_readBuffer;
     }
