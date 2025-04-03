@@ -38,9 +38,6 @@ int main(int argc, char *argv[]) {
     ws_server.registerWebSocketService(&ws_service);
 
 
-    //     std::function<void(const WebSocketChannel *, const HttpRequest *)>     onopen;
-    // std::function<void(const WebSocketChannel *, const char *msg, size_t len, ws_opcode op_code)>   onmessage;
-    // std::function<void(const WebSocketChannel *)>     onclose;
     ws_service.onopen = [](conn::WebSocketChannel * channel, const conn::HttpRequest * req) {
         TestServer *test_server = new TestServer();
         channel->setWSContext(test_server);
